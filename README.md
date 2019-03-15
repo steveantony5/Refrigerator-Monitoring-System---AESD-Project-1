@@ -1,5 +1,5 @@
 # Refrigerator-Monitoring-System---AESD-Project-1. 
-run main process using: 
+run main process using:   
 make  
 ./main log_queue.txt log  
 
