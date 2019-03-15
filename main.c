@@ -4,6 +4,10 @@
 pthread_t thread2;
 pthread_t thread1;
 
+
+
+
+
 void *thread2_callback(void *arg)
 {
 	int i;
@@ -33,6 +37,7 @@ void *thread1_callback(void *arg)
 		sleep(1);
 	}
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -72,16 +77,19 @@ int main(int argc, char *argv[])
 	pthread_attr_init(&attribute);
 
 	pthread_create(&logger_thread, &attribute, logger_thread_callback, (void *)&fd);
-	
+
 	pthread_create(&thread1, &attribute, thread1_callback, (void *)&fd);
 
 	pthread_create(&thread2, &attribute, thread2_callback, (void *)&fd);
+
+	pthread_create(&remote_request_thread, &attribute, remote_request_callback, (void *)&fd);
 	
 
 
 	pthread_join(logger_thread, NULL);
 	pthread_join(thread1, NULL);
 	pthread_join(thread2, NULL);
+	pthread_join(remote_request_thread, NULL);
 
 	fclose(file_ptr);
 	

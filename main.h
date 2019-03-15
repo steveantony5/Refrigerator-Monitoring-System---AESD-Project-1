@@ -3,6 +3,7 @@
 
 
 #include "logger.h"
+#include "remote_request.h"
 
 
 #endif
