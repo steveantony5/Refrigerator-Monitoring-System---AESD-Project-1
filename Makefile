@@ -1,6 +1,6 @@
 CC = gcc
-Flags = -Wall -Werror -pthread -lrt
-SRC := logger.c main.c remote_request.c
+Flags = -Wall -Werror -pthread -lrt -g
+SRC := logger.c main.c remote_request.c heartbeat.c POSIX_timer.c
 OBJ :=$(SRC:.c=.o)
 OP = main
 
