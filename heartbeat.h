@@ -8,6 +8,7 @@
 #include "POSIX_timer.h"
 #include <sys/types.h>
 #include "logger.h"
+#include "remote_request.h"
 
 /*****************************************************************
 						Function Protypes
