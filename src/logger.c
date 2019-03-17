@@ -1,3 +1,7 @@
+/*****************************************************************
+						Includes
+*****************************************************************/
+
 #include "logger.h"
 
 
@@ -5,11 +9,11 @@ const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
 
 char *time_stamp()
 {
-	char *time_stamp;
+	char *time_stam = malloc(sizeof(char)*30);
 	time_t timer;
 	timer = time(NULL);
-	strftime(time_stamp, 26, "%Y-%m-%d %H:%M:%S", localtime(&timer));
-	return time_stamp;	
+	strftime(time_stam, 26, "%Y-%m-%d %H:%M:%S", localtime(&timer));
+	return time_stam;	
 }
 
 float get_temperature()

@@ -1,3 +1,6 @@
+/*****************************************************************
+                        Includes
+*****************************************************************/
 #include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -14,10 +17,10 @@
 char message[MAX_BUFFER_SIZE];
 int client_socket;
 
-/******************************************************
+/*****************************************************************
        Function for client socket creation
        Parameters : port number, ip address in string
-*******************************************************/
+*****************************************************************/
 int socket_creation_client(int port,char ip[20])
 {
     client_socket = socket(AF_INET,SOCK_STREAM,0);// setting the client socket
