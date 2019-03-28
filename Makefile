@@ -22,6 +22,8 @@ all: $(OBJ)
 client: $(CLIENT_OBJ)
 	$(CC) $(CLIENT_OBJ) $(INCLUDES)  $(CLIENT_FLAGS) -o $(CLIENT_OP)
 
+bbg:
+	arm-linux-gcc -o main src/logger.c src/remote_request.c src/heartbeat.c src/POSIX_timer.c src/lux.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 clean:
 	rm $(OBJ) $(OP) $(CLIENT_OBJ) $(CLIENT_OP)
