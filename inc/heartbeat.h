@@ -11,6 +11,7 @@
 #include "remote_request.h"
 #include "lux.h"
 #include "temp.h"
+#include "i2c.h"
 /*****************************************************************
 						Function Protypes
 *****************************************************************/
@@ -27,7 +28,7 @@ void *lux_task();
  extern char * log_t;
  extern uint16_t CH0;
 extern uint16_t CH1;
-
+extern int file_des_lux;
 /*****************************************************************
 						MACROS
 *****************************************************************/

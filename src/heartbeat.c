@@ -99,7 +99,7 @@ void *lux_task()
 		// exit(1);
 	}
 
-	if((i2c_setup(2,0x39)) != 0)
+	if((i2c_setup(file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		goto reboot;

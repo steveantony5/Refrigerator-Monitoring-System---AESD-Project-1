@@ -1,37 +1,17 @@
 #include "temp.h"
 
+int file_des_temp;
 
-/*int i2c_setup(int bus_no,int address)
-{
-	memset(bus,0,sizeof(bus));
-
-	sprintf(bus,"/dev/i2c-%d",bus_no);
-
-	if((file_des = open(bus, O_RDWR)) < 0)
-	{
-		perror("Error on opening the bus\n");
-		return 1;
-	}
-
-	if ((ioctl(file_des, I2C_SLAVE, address)) < 0)
-	{
-		perror("Error on input output control of bus\n");
-		return 1;
-	}
-
-	return 0;
-
-}*/
 
 int temp_sensor_init()
 {
-	return i2c_setup(2,TEMP_ADDR); 
+	return i2c_setup(file_des_temp,2,TEMP_ADDR); 
 }
 
 int pointer_reg_write(pointer_reg reg)
 {
 	int8_t buffer = reg;
-	int ret_val = write(file_des, &buffer, sizeof(buffer));
+	int ret_val = write(file_des_temp, &buffer, sizeof(buffer));
 
 	if(ret_val == -1)
 	{
@@ -70,7 +50,7 @@ int tlow_reg_read()
 
 	int8_t readBytes[2] = {0};
 
-	int ret_val = read(file_des, &readBytes,sizeof(readBytes));
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
 	if(ret_val == -1)
 	{
 		perror("Error on reading TLOW REGISTER");
@@ -112,7 +92,7 @@ int thigh_reg_read()
 
 	int8_t readBytes[2] = {0};
 
-	int ret_val = read(file_des, &readBytes,sizeof(readBytes));
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
 	if(ret_val == -1)
 	{
 		perror("Error on reading TLOW REGISTER");
@@ -140,7 +120,7 @@ int temp_read()
 
 	//pointer reg write for temperature conversion
 	
-	int ret_val = read(file_des, &readBytes,sizeof(readBytes));
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
 
 	if(ret_val == -1)
 	{
@@ -159,7 +139,7 @@ int temp_read()
 
 float temp_in_celcius()
 {
-	return (int)temp_read * 0.0625;
+	return (temp_read() * 0.0625);
 }
 
 /*int main()

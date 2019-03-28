@@ -2,15 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <linux/i2c-dev.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <fcntl.h>
-#include <stdint.h>
 
-#include "lux.h"
+
+#include "i2c.h"
 
 
 #define TEMP_ADDR 0x48
@@ -24,7 +18,6 @@ typedef enum pointer_reg{
 
 
 int file_des;
-char bus[15];
 
 //int i2c_setup(int bus_no,int address);
 
