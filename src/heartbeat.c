@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
 	
 	pthread_create(&temperature_thread, &attr, temperature_task, NULL);	
 
-	// pthread_create(&lux_thread, &attr, lux_task, NULL);	
+	pthread_create(&lux_thread, &attr, lux_task, NULL);	
 
 	pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd);
 
@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
 
 	//wait till the child completes
 	pthread_join(temperature_thread,NULL);
-	// pthread_join(lux_thread,NULL);
+	pthread_join(lux_thread,NULL);
 
 	pthread_join(logger_thread, NULL);
 	pthread_join(remote_request_thread, NULL);
