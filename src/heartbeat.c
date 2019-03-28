@@ -39,13 +39,22 @@ void *temperature_task()
 
 	int fd1 = open(Temp, O_WRONLY);
 
+	temp_sensor_init();
+
 	while(1)
 	{
 		if(FLAG_READ_TEMP)
 		{
+			memset(buffer,0,MAX_BUFFER_SIZE);
+			sprintf(buffer,"Temperatue in celcius = %f\n", temp_read() * 0.0625);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Temperatue = x\n");
+			sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+			memset(buffer,0,MAX_BUFFER_SIZE);
+			sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
@@ -87,7 +96,7 @@ void *lux_task()
 	if(reboot_tries ==10)
 	{
 		printf("Reboot failed multiple times\n");
-		exit(1);
+		// exit(1);
 	}
 
 	if((i2c_setup(2,0x39)) != 0)
@@ -224,7 +233,7 @@ int main(int argc, char *argv[])
 	
 	pthread_create(&temperature_thread, &attr, temperature_task, NULL);	
 
-	pthread_create(&lux_thread, &attr, lux_task, NULL);	
+	// pthread_create(&lux_thread, &attr, lux_task, NULL);	
 
 	pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd);
 
@@ -273,7 +282,7 @@ int main(int argc, char *argv[])
 
 	//wait till the child completes
 	pthread_join(temperature_thread,NULL);
-	pthread_join(lux_thread,NULL);
+	// pthread_join(lux_thread,NULL);
 
 	pthread_join(logger_thread, NULL);
 	pthread_join(remote_request_thread, NULL);

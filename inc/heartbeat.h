@@ -10,6 +10,7 @@
 #include "logger.h"
 #include "remote_request.h"
 #include "lux.h"
+#include "temp.h"
 /*****************************************************************
 						Function Protypes
 *****************************************************************/
