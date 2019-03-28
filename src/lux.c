@@ -40,7 +40,7 @@ uint16_t ratio;
 
 int main()
 {
-	if((i2c_setup(1,0x39)) != 0)
+	if((i2c_setup(2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		exit(1);
