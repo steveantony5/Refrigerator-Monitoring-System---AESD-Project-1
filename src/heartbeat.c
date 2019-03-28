@@ -67,6 +67,9 @@ void *temperature_task()
 *****************************************************************/
 void *lux_task()
 {
+	float lux = 0;
+	int reboot_tries = 0;
+
 	char buffer[MAX_BUFFER_SIZE];
 
 	sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
@@ -79,13 +82,52 @@ void *lux_task()
 
 	int fd2 = open(Lux, O_WRONLY); 
 
+	reboot:
+	reboot_tries++;
+	if(reboot_tries ==10)
+	{
+		printf("Reboot failed multiple times\n");
+		exit(1);
+	}
+
+	if((i2c_setup(2,0x39)) != 0)
+	{
+		perror("Error on i2c bus set up for lux sensor");
+		goto reboot;
+	}
+
+	if(lux_sensor_setup()<0)
+	{
+		perror("Error on lux sensor configuration\n");
+		goto reboot;
+	}
+
+
 	while(1)
 	{
 		if(FLAG_READ_LUX)
 		{
+			if(read_channel_0()<0)
+			{
+				perror("Error on reading channel 0\n");
+				goto reboot;
+			}
+
+			if(read_channel_1()<0)
+			{
+				perror("Error on reading channel 0\n");
+				goto reboot;
+			}
+
+			printf("CH0 %d\n",CH0);
+			printf("CH1 %d\n",CH1);
+
+			lux = lux_measurement(CH0,CH1);
+			printf("lux %f\n",lux);
+
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Lux = x\n");
+			sprintf(buffer,"Lux = %f\n",lux);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			write(fd2, "L", 1);

@@ -1,8 +1,8 @@
 CC = gcc
-CFLAGS = -Wall -Werror -Iinc/ -pthread -lrt -g
+CFLAGS = -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 vpath %.c src/
-SRC := logger.c remote_request.c heartbeat.c POSIX_timer.c
+SRC := logger.c remote_request.c heartbeat.c POSIX_timer.c lux.c
 
 OBJ :=$(SRC:.c=.o)
 OP = main

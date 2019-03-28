@@ -1,29 +1,4 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <linux/i2c-dev.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <math.h>
-
-#define CONTROL_REGISTER (0X00)
-#define TIMING_REGISTER (0X01)
-#define DATA0LOW_REGISTER (0X0C)
-#define DATA0HIGH_REGISTER (0X0D)
-#define DATA1LOW_REGISTER (0X0E)
-#define DATA1HIGH_REGISTER (0X0F)
-
-#define WRITE_COMMAND (0x80)
-
-int i2c_setup(int ,int );
-int lux_sensor_setup();
-int read_channel_0();
-int read_channel_1();
-float lux_measurement(float , float );
+#include "lux.h"
 
 int file_des;
 char bus[15];
@@ -37,53 +12,8 @@ uint8_t LSB_1;
 uint16_t CH0;
 uint16_t CH1;
 
-float lux;
-int reboot_tries = 0;
 
-int main()
-{
-	reboot:
-	if((i2c_setup(2,0x39)) != 0)
-	{
-		perror("Error on i2c bus set up for lux sensor");
-		goto reboot;
-	}
 
-	if(lux_sensor_setup()<0)
-	{
-		perror("Error on lux sensor configuration\n");
-		goto reboot;
-	}
-
-	reboot_tries++;
-	if(reboot_tries ==10)
-	{
-		printf("Reboot failed multiple times\n");
-		exit(1);
-	}
-	
-	while(1)
-	{
-		if(read_channel_0()<0)
-		{
-			perror("Error on reading channel 0\n");
-			goto reboot;
-		}
-
-		if(read_channel_1()<0)
-		{
-			perror("Error on reading channel 0\n");
-			goto reboot;
-		}
-
-		printf("CH0 %d\n",CH0);
-		printf("CH1 %d\n",CH1);
-
-		lux = lux_measurement(CH0,CH1);
-		printf("lux %f\n",lux);
-
-	}
-}
 
 
 int i2c_setup(int bus_no,int address)
@@ -262,6 +192,12 @@ float lux_measurement(float CH0, float CH1)
 	//CH1/CH0>1.30 Sensor Lux = 0
 	else if(ratio  > 1.30)
 		return 0;
+
+	else
+	{
+		printf("Invalid\n");
+		return -1;
+	}
 
 
 }

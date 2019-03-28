@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include "logger.h"
 #include "remote_request.h"
-
+#include "lux.h"
 /*****************************************************************
 						Function Protypes
 *****************************************************************/
@@ -24,6 +24,9 @@ void *lux_task();
  extern char * Temp;
  extern char * Lux ;
  extern char * log_t;
+ extern uint16_t CH0;
+extern uint16_t CH1;
+
 /*****************************************************************
 						MACROS
 *****************************************************************/
