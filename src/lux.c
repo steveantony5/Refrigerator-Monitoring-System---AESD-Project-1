@@ -38,34 +38,42 @@ uint16_t CH0;
 uint16_t CH1;
 
 float lux;
-
+int reboot_tries = 0;
 
 int main()
 {
+	reboot:
 	if((i2c_setup(2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
-		exit(1);
+		goto reboot;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
-		exit(1);
+		goto reboot;
 	}
 
+	reboot_tries++;
+	if(reboot_tries ==10)
+	{
+		printf("Reboot failed multiple times\n");
+		exit(1);
+	}
+	
 	while(1)
 	{
 		if(read_channel_0()<0)
 		{
 			perror("Error on reading channel 0\n");
-			exit(1);
+			goto reboot;
 		}
 
 		if(read_channel_1()<0)
 		{
 			perror("Error on reading channel 0\n");
-			exit(1);
+			goto reboot;
 		}
 
 		printf("CH0 %d\n",CH0);
