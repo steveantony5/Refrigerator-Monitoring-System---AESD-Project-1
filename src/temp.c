@@ -5,7 +5,7 @@ int file_des_temp;
 
 int temp_sensor_init()
 {
-	return i2c_setup(file_des_temp,2,TEMP_ADDR); 
+	return i2c_setup(&file_des_temp,2,TEMP_ADDR); 
 }
 
 int pointer_reg_write(pointer_reg reg)

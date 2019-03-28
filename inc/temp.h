@@ -17,7 +17,7 @@ typedef enum pointer_reg{
 }pointer_reg;
 
 
-int file_des;
+// int file_des;
 
 //int i2c_setup(int bus_no,int address);
 

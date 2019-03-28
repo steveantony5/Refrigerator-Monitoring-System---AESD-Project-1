@@ -10,6 +10,8 @@ timer_t timer_id_temp, timer_id_lux , timer_id_heartbeat;
 
 pthread_t temperature_thread , lux_thread;
 
+pthread_mutex_t lock;
+
 int Pulse_temp = 0;
 int Pulse_lux = 0;
 int Pulse_log = 0;
@@ -45,8 +47,11 @@ void *temperature_task()
 	{
 		if(FLAG_READ_TEMP)
 		{
+			// pthread_mutex_lock(&lock);
+			printf("Test temp\n");
 			memset(buffer,0,MAX_BUFFER_SIZE);
 			sprintf(buffer,"Temperatue in celcius = %f\n", temp_read() * 0.0625);
+			printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
@@ -65,6 +70,7 @@ void *temperature_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			FLAG_READ_TEMP = 0;
+			// pthread_mutex_unlock(&lock);
 
 		}
 	}
@@ -99,7 +105,7 @@ void *lux_task()
 		// exit(1);
 	}
 
-	if((i2c_setup(file_des_lux,2,0x39)) != 0)
+	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		goto reboot;
@@ -114,8 +120,11 @@ void *lux_task()
 
 	while(1)
 	{
+
 		if(FLAG_READ_LUX)
 		{
+			// pthread_mutex_lock(&lock);
+			printf("Test lux\n");
 			if(read_channel_0()<0)
 			{
 				perror("Error on reading channel 0\n");
@@ -145,6 +154,7 @@ void *lux_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			FLAG_READ_LUX = 0;
+			// pthread_mutex_unlock(&lock);
 		}
 	}
 	close(fd2);
@@ -222,6 +232,12 @@ int main(int argc, char *argv[])
 	sprintf(file_name,"%s%s/%s",LOG_PATH, fd.file_path, fd.file_name);
 
 	logger_init(file_name);
+
+	// if (pthread_mutex_init(&lock, NULL) != 0) 
+ //    { 
+ //        perror("Mutex init failed\n"); 
+ //        return -1; 
+ //    }
 
 	file_ptr = fopen(file_name, "a+");
 

@@ -12,4 +12,4 @@
 #include <stdio.h>
 
 
-int i2c_setup(int , int ,int );
+int i2c_setup(int * , int ,int );
