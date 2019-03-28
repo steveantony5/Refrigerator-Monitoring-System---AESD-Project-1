@@ -7,6 +7,8 @@
 
 const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
 
+pthread_mutex_t lock;
+
 char *time_stamp()
 {
 	char *time_stam = malloc(sizeof(char)*30);
@@ -33,6 +35,13 @@ void logger_init(char *file_path)
 	fprintf(file_ptr,"Queue Init\n\n");
     fclose(file_ptr);
 
+    if (pthread_mutex_init(&lock, NULL) != 0) 
+    { 
+        perror("Mutex init failed\n"); 
+        return; 
+    }
+
+
     struct mq_attr mq_attributes;
 
     mq_attributes.mq_flags = 0;
@@ -58,7 +67,9 @@ void *logger_thread_callback(void *arg)
    	{
 	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0))
 	    {
+			pthread_mutex_lock(&lock);
 			LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(), buffer);
+			pthread_mutex_unlock(&lock);
 	    }
 	}
 
