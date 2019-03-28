@@ -16,6 +16,8 @@
 // #define MAX_BUFFER_SIZE (100) 
 #define LISTEN_MAX (10)
 
+extern const char *log_level[10];
+
 pthread_t remote_request_thread;
 
 char message[MAX_BUFFER_SIZE];
