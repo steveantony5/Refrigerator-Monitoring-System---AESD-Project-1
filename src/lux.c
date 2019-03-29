@@ -45,7 +45,7 @@ int lux_sensor_setup()
 	}
 
 	//value for the control register
-	register_data = 0x11;
+	register_data = 0x12;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
@@ -140,12 +140,17 @@ int read_channel_1()
 
  
 }
-
+  
 
 float lux_measurement(float CH0, float CH1)
 {
 
 	float ratio = (CH1 / CH0);
+
+	printf("Ratio %f\n",ratio);
+	memset(buffer,0,MAX_BUFFER_SIZE);
+	sprintf(buffer,"lux ratio = %f\n",ratio);
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	//0 < CH1/CH0 ≤ 0.50 Sensor Lux = (0.0304 x CH0) – (0.062 x CH0 x ((CH1/CH0)1.4))
 

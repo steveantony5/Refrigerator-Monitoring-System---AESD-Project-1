@@ -98,12 +98,7 @@ void *lux_task()
 	int fd2 = open(Lux, O_WRONLY); 
 
 	reboot:
-	reboot_tries++;
-	if(reboot_tries ==10)
-	{
-		printf("Reboot failed multiple times\n");
-		// exit(1);
-	}
+	
 
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
@@ -117,12 +112,14 @@ void *lux_task()
 		goto reboot;
 	}
 
-
+  
 	while(1)
 	{
 
 		if(FLAG_READ_LUX)
 		{
+			usleep(400000);
+
 			// pthread_mutex_lock(&lock);
 			printf("Test lux\n");
 			if(read_channel_0()<0)
@@ -145,7 +142,7 @@ void *lux_task()
 
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Lux = %f\n",lux);
+			sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			write(fd2, "L", 1);
