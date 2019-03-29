@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 vpath %.c src/
-SRC :=  i2c.c logger.c remote_request.c heartbeat.c POSIX_timer.c lux.c temp.c
+SRC :=  i2c.c logger.c heartbeat.c POSIX_timer.c lux.c temp.c
 
 OBJ :=$(SRC:.c=.o)
 OP = main
@@ -23,8 +23,8 @@ client: $(CLIENT_OBJ)
 	$(CC) $(CLIENT_OBJ) $(INCLUDES)  $(CLIENT_FLAGS) -o $(CLIENT_OP)
 
 bbg:
-	arm-linux-gcc -o main src/i2c.c src/heartbeat.c src/logger.c src/remote_request.c src/POSIX_timer.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
+	arm-linux-gcc -o main src/i2c.c src/heartbeat.c src/logger.c src/POSIX_timer.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 clean:
-	rm $(OBJ) $(OP) $(CLIENT_OBJ) $(CLIENT_OP)
+	rm -f *.o main
 	rm -rf $(LOG_FOLDER)

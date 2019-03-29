@@ -331,7 +331,6 @@ int main(int argc, char *argv[])
 
 	pthread_create(&lux_thread, &attr, lux_task, NULL);	
 
-	pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd);
 
 
 	mkfifo(Temp, 0666);
@@ -381,7 +380,6 @@ int main(int argc, char *argv[])
 	pthread_join(lux_thread,NULL);
 
 	pthread_join(logger_thread, NULL);
-	pthread_join(remote_request_thread, NULL);
 
 	fclose(file_ptr);
 
