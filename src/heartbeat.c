@@ -84,6 +84,7 @@ void *temperature_task()
 
 	config_reg_read(&configuration);
 
+
 	while(1)
 	{
 		if(FLAG_READ_TEMP)
