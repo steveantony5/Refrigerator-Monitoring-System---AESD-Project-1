@@ -147,7 +147,7 @@ float lux_measurement(float CH0, float CH1)
 
 	float ratio = (CH1 / CH0);
 
-	printf("Ratio %f\n",ratio);
+	//printf("Ratio %f\n",ratio);
 	memset(buffer,0,MAX_BUFFER_SIZE);
 	sprintf(buffer,"lux ratio = %f\n",ratio);
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);

@@ -42,6 +42,7 @@ int main()
 
         if(strcmp(command,"temp-k") == 0)
         {
+            printf("command --> %s\n",command);
             write(fd_temp, command, SIZE);
             printf("request sent to temp in K\n");
             

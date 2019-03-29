@@ -94,7 +94,7 @@ void *temperature_task()
 			float temperature_celcius = temp_read() * 0.0625;
 			memset(buffer,0,MAX_BUFFER_SIZE);
 			sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
-			printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
+			//printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
@@ -115,7 +115,9 @@ void *temperature_task()
 			FLAG_READ_TEMP = 0;
 			pthread_mutex_unlock(&lock);
 
+			memset(buffer_req_temp,0,SIZE);
 			read(fd1_pipe, buffer_req_temp, SIZE);
+			printf("noting received %s\n",buffer_req_temp);
 			if(strlen(buffer_req_temp)>0)
         	{
         		printf("Request received in temperature task\n");
@@ -222,11 +224,11 @@ void *lux_task()
 				goto reboot;
 			}
 
-			printf("CH0 %d\n",CH0);
-			printf("CH1 %d\n",CH1);
+			//printf("CH0 %d\n",CH0);
+			//printf("CH1 %d\n",CH1);
 
 			lux = lux_measurement(CH0,CH1);
-			printf("lux %f\n",lux);
+			//printf("lux %f\n",lux);
 
 			has_state_transition_occurred(lux);
 
