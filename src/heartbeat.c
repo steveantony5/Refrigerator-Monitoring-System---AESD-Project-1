@@ -83,7 +83,7 @@ void *temperature_task()
 void *lux_task()
 {
 	float lux = 0;
-	int reboot_tries = 0;
+	// int reboot_tries = 0;
 
 	char buffer[MAX_BUFFER_SIZE];
 

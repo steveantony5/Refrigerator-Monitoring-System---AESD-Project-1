@@ -106,7 +106,7 @@ void *remote_request_callback(void *arg)
          	LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(), message);
          	printf("Received: %s\n",message);
 
-         	if(strcmp(message,"temp") == 0)
+         	if(strcmp(message,"tempC") == 0)
          	{
          		LOG_MESSAGE(file_name,"%s %s %f\n", log_level[0], time_stamp(), get_temperature());
          		printf("Temperature = %f\n", get_temperature());

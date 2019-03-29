@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <math.h>
 #include "i2c.h"
+#include "logger.h"
 
 #define CONTROL_REGISTER (0X00)
 #define TIMING_REGISTER (0X01)

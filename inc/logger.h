@@ -27,6 +27,8 @@ FILE *file_ptr;
 #define QUEUE_NAME "/msg_queue"
 #define MAX_BUFFER_SIZE	100
 
+char buffer[MAX_BUFFER_SIZE];
+
 
 typedef struct
 {
