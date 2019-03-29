@@ -2,6 +2,8 @@
 
 int file_des_temp;
 
+uint16_t default_configuration = 0x60A0;
+
 
 int temp_sensor_init()
 {
@@ -22,13 +24,142 @@ int pointer_reg_write(pointer_reg reg)
 	return 0;
 }
 
-/*
-int tlow_reg_write()
+int config_reg_read(uint16_t *configuration)
+{
+	pointer_reg_write(configReg);
+	uint16_t config;
+
+	uint8_t readBytes[2] = {0};
+
+	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+
+	if(ret_val == -1)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return -1;
+	}
+
+	config = (readBytes[0] << 8 | readBytes[1]);
+
+	printf("CONFIG REG READ = %x\n", config);
+
+	*configuration = config;
+
+	return 0;
+
+}
+
+int config_reg_write_default()
+{
+	pointer_reg_write(configReg);
+
+	uint8_t higherByte = default_configuration >> 8;
+	uint8_t lowerByte = (uint8_t)default_configuration;
+
+	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
+
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+
+	if(ret_val == -1)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return -1;
+	}
+
+	return 0;
+}
+
+int config_sd()
+{
+	pointer_reg_write(configReg);
+
+	uint16_t writeConfig;
+
+	config_reg_read(&writeConfig);
+
+	writeConfig |= SD_MODE; 
+
+	uint8_t higherByte = writeConfig >> 8;
+	uint8_t lowerByte = (uint8_t)writeConfig;
+
+
+	printf("writeConfig = %x\n", writeConfig);
+
+	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
+
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+
+	if(ret_val == -1)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return -1;
+	}
+
+	return 0;
+}
+
+int config_sd_continuous()
+{
+	pointer_reg_write(configReg);
+
+	uint16_t writeConfig;
+
+	config_reg_read(&writeConfig);
+
+	writeConfig &= ~(SD_MODE); 
+
+	uint8_t higherByte = writeConfig >> 8;
+	uint8_t lowerByte = (uint8_t)writeConfig;
+
+
+	printf("writeConfig = %x\n", writeConfig);
+
+	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
+
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+
+	if(ret_val == -1)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int config_read_conversion_rate()
+{
+	pointer_reg_write(configReg);
+
+	uint8_t readBytes[2];
+
+	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+
+	if(ret_val == -1)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return -1;
+	}
+
+	printf("conversion rate prior1 = %x\n", readBytes[0]);
+	printf("conversion rate prior 2 = %x\n", readBytes[1]);
+
+	readBytes[1] &= 0xC0;
+	readBytes[1] = readBytes[1] >> 6;
+
+	printf("conversion rate = %x\n", readBytes[1]);
+
+	return 0;
+}
+
+
+int tlow_reg_write(uint8_t temp_in_C)
 {
 	pointer_reg_write(tlowReg);
 
-	int8_t readBytes = 160;
-	int ret_val = write(file_des, &readBytes,sizeof(readBytes));
+	uint8_t writeBytes[2] = {tlowReg, temp_in_C};
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
 	if(ret_val == -1)
 	{
 		perror("Error on writing TLOW REGISTER");
@@ -37,7 +168,21 @@ int tlow_reg_write()
 
 	return 0;
 
-}*/
+}
+
+int thigh_reg_write(uint8_t temp_in_C)
+{
+	pointer_reg_write(tlowReg);
+	uint8_t writeBytes[2] = {thighReg, temp_in_C};
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	if(ret_val == -1)
+	{
+		perror("Error on writing TLOW REGISTER");
+		return -1;
+	}
+
+	return 0;
+}
 
 int tlow_reg_read()
 {
@@ -67,19 +212,6 @@ int tlow_reg_read()
 
 
 }
-
-/*
-uint16_t tlow_reg_read()
-{
-
-	uint16_t buff;
-	pointer_reg_write(tlowReg);
-	int ret =  read(file_des,&buff,sizeof(buff));
-	if (ret < 0)
-		perror("Read tlow reg failed");
-	
-	return buff;
-}*/
 
 int thigh_reg_read()
 {
@@ -141,18 +273,3 @@ float temp_in_celcius()
 {
 	return (temp_read() * 0.0625);
 }
-
-/*int main()
-{
-	temp_sensor_init();
-
-	//tlow_reg_write(160);
-
-	while(1)
-	{
-		sleep(1);
-		printf("\nTemperature in celcius = %f", temp_read() * 0.0625);
-		printf("\nT-high in celcius = %f", thigh_reg_read() * 0.0625);
-		printf("\nT-low in celcius = %f\n", tlow_reg_read() * 0.0625);
-	}
-}*/

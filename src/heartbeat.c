@@ -44,6 +44,8 @@ void *temperature_task()
 	char buffer[MAX_BUFFER_SIZE];
 	char buffer_req_temp[SIZE];
 
+	uint16_t configuration;
+
 
     sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -59,6 +61,28 @@ void *temperature_task()
 	fd1_pipe = open(myfifo_temp,O_RDWR|O_NONBLOCK);
 
 	temp_sensor_init();
+
+	config_reg_read(&configuration);
+
+	tlow_reg_write(10);
+
+	thigh_reg_write(100);
+
+	config_reg_write_default();
+
+	config_reg_read(&configuration);
+
+	config_read_conversion_rate();
+
+	config_reg_read(&configuration);
+
+	config_sd();
+
+	config_reg_read(&configuration);
+
+	config_sd_continuous();
+
+	config_reg_read(&configuration);
 
 	while(1)
 	{

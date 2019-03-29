@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
 #include "i2c.h"
@@ -16,6 +17,7 @@ typedef enum pointer_reg{
 	thighReg
 }pointer_reg;
 
+#define SD_MODE (1 << 8)
 
 // int file_des;
 
@@ -32,3 +34,17 @@ int thigh_reg_read();
 int temp_read();
 
 float temp_in_celcius();
+
+int tlow_reg_write(uint8_t);
+
+int thigh_reg_write(uint8_t);
+
+int config_reg_read();
+
+int config_reg_write_default();
+
+int config_read_conversion_rate();
+
+int config_sd_continuous();
+
+int config_sd();
