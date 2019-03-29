@@ -48,9 +48,12 @@ int main()
             memset(buffer,0,SIZE);
             if(read(fd_temp, buffer, SIZE) < 0)
             {
-                printf("Temp Thread is inactive\n");
+                printf("Error on Temperature measurement\n");
             }
-            printf("%s\n",buffer);
+            else
+            {
+                printf("%s\n",buffer);
+            }
         }
 
         else if(strcmp(command,"temp-c") == 0)
@@ -61,9 +64,12 @@ int main()
             memset(buffer,0,SIZE);
             if(read(fd_temp, buffer, SIZE) < 0)
             {
-                printf("Temp Thread is inactive\n");
+                printf("Error on Temperature measurement\n");
             }
-            printf("%s\n",buffer);
+            else
+            {
+                printf("%s\n",buffer);
+            }
         }
 
         else if(strcmp(command,"temp-f") == 0)
@@ -74,9 +80,12 @@ int main()
             memset(buffer,0,SIZE);
             if(read(fd_temp, buffer, SIZE) < 0)
             {
-                printf("Temp Thread is inactive\n");
+                printf("Error on Temperature measurement\n");
             }
-            printf("%s\n",buffer);
+            else
+            {
+                printf("%s\n",buffer);
+            }
         }
 
         else if(strcmp(command,"lux") == 0)
@@ -87,9 +96,12 @@ int main()
             memset(buffer,0,SIZE);
             if(read(fd_lux, buffer, SIZE) < 0)
             {
-                printf("Temp Thread is inactive\n");
+                printf("Error on Temperature measurement\n");
             }
-            printf("%s\n",buffer);
+            else
+            {
+                printf("%s\n",buffer);
+            }
 
         }
 
