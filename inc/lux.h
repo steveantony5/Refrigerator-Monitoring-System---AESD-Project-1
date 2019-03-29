@@ -20,3 +20,4 @@ int lux_sensor_setup();
 int read_channel_0();
 int read_channel_1();
 float lux_measurement(float , float );
+void has_state_transition_occurred(float );

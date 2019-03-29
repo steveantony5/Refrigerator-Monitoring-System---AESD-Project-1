@@ -2,11 +2,11 @@
 
 int file_des_lux;
 uint8_t register_data;
-uint8_t MSB_0;
-uint8_t LSB_0;
+uint16_t MSB_0;
+uint16_t LSB_0;
 
-uint8_t MSB_1;
-uint8_t LSB_1;
+uint16_t MSB_1;
+uint16_t LSB_1;
 
 uint16_t CH0;
 uint16_t CH1;
@@ -44,7 +44,7 @@ int lux_sensor_setup()
 		return -1;
 	}
 
-	//value for the control register
+	//value for the control registe16
 	register_data = 0x12;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
@@ -91,7 +91,7 @@ int read_channel_0()
 		return -1;
 	}
 
-	CH0 = MSB_0 < 8;
+	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
 
 	return 0;
@@ -133,7 +133,7 @@ int read_channel_1()
 		return -1;
 	}
 
-	CH1 = MSB_1 < 8;
+	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
 	return 0;
@@ -179,6 +179,30 @@ float lux_measurement(float CH0, float CH1)
 		printf("Invalid\n");
 		return -1;
 	}
+
+
+}
+
+void has_state_transition_occurred(float lux)
+{
+	static float prev_lux = 0;
+	if((lux > 300) && (prev_lux <300))
+	{
+		printf("State changed from Dark to Bright\n");
+		memset(buffer,0,MAX_BUFFER_SIZE);
+		sprintf(buffer,"State changed from Dark to Bright\n");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	}
+	else if((lux < 300) && (prev_lux > 300))
+	{
+		printf("State changed from Bright to Dark\n");
+		memset(buffer,0,MAX_BUFFER_SIZE);
+		sprintf(buffer,"State changed from Bright to Dark\n");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	}
+	prev_lux = lux;
 
 
 }

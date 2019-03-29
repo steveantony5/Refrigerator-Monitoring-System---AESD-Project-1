@@ -47,8 +47,7 @@ void *temperature_task()
 	{
 		if(FLAG_READ_TEMP)
 		{
-			// pthread_mutex_lock(&lock);
-			printf("Test temp\n");
+			pthread_mutex_lock(&lock);
 			memset(buffer,0,MAX_BUFFER_SIZE);
 			sprintf(buffer,"Temperatue in celcius = %f\n", temp_read() * 0.0625);
 			printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
@@ -70,7 +69,7 @@ void *temperature_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			FLAG_READ_TEMP = 0;
-			// pthread_mutex_unlock(&lock);
+			pthread_mutex_unlock(&lock);
 
 		}
 	}
@@ -112,16 +111,14 @@ void *lux_task()
 		goto reboot;
 	}
 
-  
 	while(1)
 	{
 
 		if(FLAG_READ_LUX)
 		{
-			usleep(400000);
+			// usleep(400000);
 
-			// pthread_mutex_lock(&lock);
-			printf("Test lux\n");
+			pthread_mutex_lock(&lock);
 			if(read_channel_0()<0)
 			{
 				perror("Error on reading channel 0\n");
@@ -140,6 +137,7 @@ void *lux_task()
 			lux = lux_measurement(CH0,CH1);
 			printf("lux %f\n",lux);
 
+			has_state_transition_occurred(lux);
 
 			memset(buffer,0,MAX_BUFFER_SIZE);
 			sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
@@ -151,7 +149,7 @@ void *lux_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			FLAG_READ_LUX = 0;
-			// pthread_mutex_unlock(&lock);
+			pthread_mutex_unlock(&lock);
 		}
 	}
 	close(fd2);
@@ -230,11 +228,11 @@ int main(int argc, char *argv[])
 
 	logger_init(file_name);
 
-	// if (pthread_mutex_init(&lock, NULL) != 0) 
- //    { 
- //        perror("Mutex init failed\n"); 
- //        return -1; 
- //    }
+	if (pthread_mutex_init(&lock, NULL) != 0) 
+    { 
+        perror("Mutex init failed\n"); 
+        return -1; 
+    }
 
 	file_ptr = fopen(file_name, "a+");
 
