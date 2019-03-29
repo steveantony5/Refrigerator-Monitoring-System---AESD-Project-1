@@ -46,7 +46,10 @@ int main()
             printf("request sent to temp in K\n");
             
             memset(buffer,0,SIZE);
-            read(fd_temp, buffer, SIZE);
+            if(read(fd_temp, buffer, SIZE) < 0)
+            {
+                printf("Temp Thread is inactive\n");
+            }
             printf("%s\n",buffer);
         }
 
@@ -56,7 +59,10 @@ int main()
             printf("request sent to temp in C\n");
 
             memset(buffer,0,SIZE);
-            read(fd_temp, buffer, SIZE);
+            if(read(fd_temp, buffer, SIZE) < 0)
+            {
+                printf("Temp Thread is inactive\n");
+            }
             printf("%s\n",buffer);
         }
 
@@ -66,7 +72,10 @@ int main()
             printf("request sent to temp in F\n");
 
             memset(buffer,0,SIZE);
-            read(fd_temp, buffer, SIZE);
+            if(read(fd_temp, buffer, SIZE) < 0)
+            {
+                printf("Temp Thread is inactive\n");
+            }
             printf("%s\n",buffer);
         }
 
@@ -76,7 +85,10 @@ int main()
             printf("request sent to lux\n");
 
             memset(buffer,0,SIZE);
-            read(fd_temp, buffer, SIZE);
+            if(read(fd_lux, buffer, SIZE) < 0)
+            {
+                printf("Temp Thread is inactive\n");
+            }
             printf("%s\n",buffer);
 
         }
