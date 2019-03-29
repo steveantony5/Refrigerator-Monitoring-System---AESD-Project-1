@@ -12,6 +12,15 @@
 #include "lux.h"
 #include "temp.h"
 #include "i2c.h"
+
+#include<sys/types.h>
+#include<sys/socket.h>
+#include<netinet/in.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<ctype.h>
+#include<string.h>
+
 /*****************************************************************
 						Function Protypes
 *****************************************************************/
@@ -29,10 +38,12 @@ void *lux_task();
  extern uint16_t CH0;
 extern uint16_t CH1;
 extern int file_des_lux;
+ 
 /*****************************************************************
 						MACROS
 *****************************************************************/
 #define HEART_BEAT_CHECK_PERIOD (900000000)//200ms
+#define SIZE (20)
 
 
 #endif /* HEARTBEAT_H_ */

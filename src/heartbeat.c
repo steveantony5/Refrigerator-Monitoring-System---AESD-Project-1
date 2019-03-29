@@ -23,12 +23,27 @@ int Pulse_log_prev = 0;
 int FLAG_READ_TEMP = 0;
 int FLAG_READ_LUX = 0;
 
+#define PORT_NO_TEMP 8000
+#define PORT_NO_LUX  8001
+int temp_socket;
+int lux_socket;
+
+struct sockaddr_in server_address_temp;
+struct sockaddr_in server_address_lux;
+
+char * myfifo_temp = "/tmp/fifo_temp"; 
+char * myfifo_lux = "/tmp/fifo_lux"; 
+
+int fd1_pipe, fd2_pipe; 
+
 /*****************************************************************
 						temperature_thread
 *****************************************************************/
 void *temperature_task()
 {
 	char buffer[MAX_BUFFER_SIZE];
+	char buffer_req_temp[SIZE];
+
 
     sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -38,8 +53,10 @@ void *temperature_task()
 	kick_timer(timer_id_temp, Delay_NS);
 
 	mkfifo(Temp, 0666);
+	mkfifo(myfifo_temp, 0666); 
 
 	int fd1 = open(Temp, O_WRONLY);
+	fd1_pipe = open(myfifo_temp,O_RDWR|O_NONBLOCK);
 
 	temp_sensor_init();
 
@@ -47,9 +64,12 @@ void *temperature_task()
 	{
 		if(FLAG_READ_TEMP)
 		{
+			
 			pthread_mutex_lock(&lock);
+
+			float temperature_celcius = temp_read() * 0.0625;
 			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Temperatue in celcius = %f\n", temp_read() * 0.0625);
+			sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
 			printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
@@ -71,9 +91,51 @@ void *temperature_task()
 			FLAG_READ_TEMP = 0;
 			pthread_mutex_unlock(&lock);
 
+			read(fd1_pipe, buffer_req_temp, SIZE);
+			if(strlen(buffer_req_temp)>0)
+        	{
+        		printf("Request received in temperature task\n");
+        		if(strcmp(buffer_req_temp,"temp-k") == 0)
+        		{
+            		// Print the read string and close 
+            		printf("%s received\n", buffer_req_temp); 
+            		memset(buffer_req_temp,0,SIZE);
+
+            		sprintf(buffer_req_temp, "Kelvin %f\n",(temperature_celcius+273.15));
+            		write(fd1_pipe, buffer_req_temp, SIZE);
+
+        		}
+
+        		else if(strcmp(buffer_req_temp,"temp-c") == 0)
+        		{
+            		// Print the read string and close 
+            		printf("%s received\n", buffer_req_temp); 
+            		memset(buffer_req_temp,0,SIZE);
+
+            		sprintf(buffer_req_temp, "Celcius %f\n",(temperature_celcius));
+            		write(fd1_pipe, buffer_req_temp, SIZE);
+
+        		}
+
+        		else if(strcmp(buffer_req_temp,"temp-f") == 0)
+        		{
+            		// Print the read string and close 
+            		printf("%s received\n", buffer_req_temp); 
+            		memset(buffer_req_temp,0,SIZE);
+
+            		sprintf(buffer_req_temp, "Farenheit %f\n",((temperature_celcius * (9/5))+32));
+            		write(fd1_pipe, buffer_req_temp, SIZE);
+            		
+
+        		}
+        	}
+        	memset(buffer_req_temp,0,SIZE);
+
+
 		}
 	}
 	close(fd1);
+	close(fd1_pipe);
 }
 
 /*****************************************************************
@@ -82,9 +144,10 @@ void *temperature_task()
 void *lux_task()
 {
 	float lux = 0;
-	// int reboot_tries = 0;
 
 	char buffer[MAX_BUFFER_SIZE];
+	char buffer_req_lux[SIZE];
+
 
 	sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -95,6 +158,7 @@ void *lux_task()
 	mkfifo(Lux, 0666);
 
 	int fd2 = open(Lux, O_WRONLY); 
+	fd2_pipe = open(myfifo_lux,O_RDWR|O_NONBLOCK);
 
 	reboot:
 	
@@ -117,6 +181,9 @@ void *lux_task()
 		if(FLAG_READ_LUX)
 		{
 			// usleep(400000);
+
+			
+
 
 			pthread_mutex_lock(&lock);
 			if(read_channel_0()<0)
@@ -150,11 +217,30 @@ void *lux_task()
 
 			FLAG_READ_LUX = 0;
 			pthread_mutex_unlock(&lock);
+
+			read(fd2_pipe, buffer_req_lux, SIZE);
+			if(strlen(buffer_req_lux) > 0)
+			{
+				printf("Request received in lux task\n");
+				if(strcmp(buffer_req_lux,"lux") == 0)
+        		{
+            		// Print the read string and close 
+            		printf("%s request received\n", buffer_req_lux); 
+            		memset(buffer_req_lux,0,SIZE);
+
+            		sprintf(buffer_req_lux, "Lux %f\n",lux);
+            		write(fd2_pipe, buffer_req_lux, SIZE);
+            		memset(buffer_req_lux,0,SIZE);
+
+        		}
+
+      		}        	
+
 		}
 	}
 	close(fd2);
+	close(fd2_pipe);
 }
-
 /*****************************************************************
 					Heart_beat checker
 *****************************************************************/
@@ -179,7 +265,6 @@ void beat_timer_handler(union sigval val)
 	if(Pulse_log <= Pulse_log_prev)
 	{
 		printf("Log thread dead\n");
-
 	}
 
 	if(Pulse_lux <= Pulse_lux_prev)
@@ -303,4 +388,3 @@ int main(int argc, char *argv[])
 	return 0;
 
 }
-
