@@ -19,7 +19,7 @@ uint16_t CH1;
 int lux_sensor_setup()
 {
 
-	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
+	if((i2c_setup(&file_des_lux,2,0x39)) == ERROR)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		return ERROR;
@@ -28,7 +28,7 @@ int lux_sensor_setup()
 	//command to write on control register
 	register_data = WRITE_COMMAND | CONTROL_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -37,7 +37,7 @@ int lux_sensor_setup()
 	//value for the control register
 	register_data = 0x03;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -46,7 +46,7 @@ int lux_sensor_setup()
 	//command to write on timing register
 	register_data = WRITE_COMMAND | TIMING_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -55,7 +55,7 @@ int lux_sensor_setup()
 	//value for the control registe16
 	register_data = 0x12;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the timing register\n");
 		return ERROR;
@@ -82,7 +82,7 @@ int lux_sensor_setup()
 	//command to write on control register as a word for high threshold register 
 	register_data = WRITE_COMMAND_WORD | THRESHHIGHLOW;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -91,7 +91,7 @@ int lux_sensor_setup()
 	//value for the control registe16
 	register_data_word = 0x03E8; //set to 1000
 
-	if (write(file_des_lux, &register_data_word, 2) == -1)
+	if (write(file_des_lux, &register_data_word, 2) == ERROR)
 	{
 		perror("Error on writing the high threshold register\n");
 		return ERROR;
@@ -100,7 +100,7 @@ int lux_sensor_setup()
 	//command to write on control register  for Interupt register 
 	register_data = WRITE_COMMAND | INTERRUPT;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -109,7 +109,7 @@ int lux_sensor_setup()
 	//value for the INTERRUPT register
 	register_data = 0x12; 
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the interrupt register\n");
 		return ERROR;
@@ -117,6 +117,39 @@ int lux_sensor_setup()
 
 	return SUCCESS;
 
+}
+
+
+int indication_register()
+{
+	//command to write on control register  for Interupt register 
+	register_data = WRITE_COMMAND | INDICATION_REGISTER;
+
+	if (write(file_des_lux, &register_data, 1) == ERROR)
+	{
+		perror("Error on writing the control register\n");
+		return ERROR;
+	}
+
+	if (read(file_des_lux, &register_data, 1) == ERROR)
+	{
+		perror("Error on writing the interrupt register\n");
+		return ERROR;
+	}
+
+	uint8_t part_no = register_data & (0xF0);
+	part_no = part_no >> 4;
+	printf("Part numer of Lux sensor %d\n",part_no);
+
+	uint8_t rev_no = register_data & (0x0F);
+	printf("Revision numer of Lux sensor %d\n",rev_no);
+
+
+	memset(buffer,0,MAX_BUFFER_SIZE);
+	sprintf(buffer,"LUX sensor\nPNO: %d\nRev no %d\n\n",part_no,rev_no);
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	return SUCCESS;
 }
 
 int read_channel_0()
@@ -212,10 +245,6 @@ float lux_measurement(float CH0, float CH1)
 
 	float ratio = (CH1 / CH0);
 
-	//printf("Ratio %f\n",ratio);
-	memset(buffer,0,MAX_BUFFER_SIZE);
-	sprintf(buffer,"lux ratio = %f\n",ratio);
-	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	//0 < CH1/CH0 ≤ 0.50 Sensor Lux = (0.0304 x CH0) – (0.062 x CH0 x ((CH1/CH0)1.4))
 

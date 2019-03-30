@@ -99,6 +99,7 @@ void *remote_request_callback(void *arg)
 
     while(1)
     {
+         
     	 //receiving from the other process
          if(recv(new_socket, message ,MAX_BUFFER_SIZE, 0))
          {

@@ -15,6 +15,7 @@
 #define THRESHHIGHHIGH (0x05)
 #define INTERRUPT (0x06)
 
+#define INDICATION_REGISTER (0x0A)
 #define DATA0LOW_REGISTER (0X0C)
 #define DATA0HIGH_REGISTER (0X0D)
 #define DATA1LOW_REGISTER (0X0E)
@@ -30,3 +31,4 @@ float lux_measurement(float , float );
 void has_state_transition_occurred(float );
 float get_lux();
 enum Status get_current_state_fridge(float);
+int indication_register();
