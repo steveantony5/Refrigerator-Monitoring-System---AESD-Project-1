@@ -132,15 +132,24 @@ void *lux_task()
 	int fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	
+	reboot:
+
+	if(FLAG_READ_LUX)
+	{
+		write(fd2_w, "L", 1);
+		FLAG_READ_LUX = 0;
+	}
 
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
+		goto reboot;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
+		goto reboot;
 	}
 
 	while(1)
@@ -160,11 +169,13 @@ void *lux_task()
 			if(read_channel_0()<0)
 			{
 				perror("Error on reading channel 0\n");
+				goto reboot;
 			}
 
 			if(read_channel_1()<0)
 			{
 				perror("Error on reading channel 0\n");
+				goto reboot;
 			}
 
 			//printf("CH0 %d\n",CH0);
