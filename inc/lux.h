@@ -24,6 +24,8 @@
 #define WRITE_COMMAND (0x80)
 #define WRITE_COMMAND_WORD (0xA0)
 
+extern pthread_mutex_t lock_res;
+
 int lux_sensor_setup();
 int read_channel_0();
 int read_channel_1();

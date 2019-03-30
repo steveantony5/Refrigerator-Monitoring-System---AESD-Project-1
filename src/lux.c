@@ -19,6 +19,7 @@ uint16_t CH1;
 int lux_sensor_setup()
 {
 
+	pthread_mutex_lock(&lock_res);
 	if((i2c_setup(&file_des_lux,2,0x39)) == ERROR)
 	{
 		perror("Error on i2c bus set up for lux sensor");
@@ -115,6 +116,8 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
+	pthread_mutex_unlock(&lock_res);
+
 	return SUCCESS;
 
 }
@@ -122,6 +125,7 @@ int lux_sensor_setup()
 
 int indication_register()
 {
+	pthread_mutex_lock(&lock_res);
 	//command to write on control register  for Interupt register 
 	register_data = WRITE_COMMAND | INDICATION_REGISTER;
 
@@ -137,6 +141,8 @@ int indication_register()
 		return ERROR;
 	}
 
+	pthread_mutex_unlock(&lock_res);
+
 	uint8_t part_no = register_data & (0xF0);
 	part_no = part_no >> 4;
 	printf("Part numer of Lux sensor %d\n",part_no);
@@ -149,12 +155,14 @@ int indication_register()
 	sprintf(buffer,"LUX sensor\nPNO: %d\nRev no %d\n\n",part_no,rev_no);
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
+
 	return SUCCESS;
 }
 
 int read_channel_0()
 {
 
+	pthread_mutex_lock(&lock_res);
 	//command to read on DATA0LOW register
 	register_data = WRITE_COMMAND | DATA0LOW_REGISTER;
 
@@ -190,6 +198,8 @@ int read_channel_0()
 
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
+
+	pthread_mutex_unlock(&lock_res);
 	// printf("CH0 %d\n",CH0);
 	return SUCCESS;
 
@@ -198,6 +208,7 @@ int read_channel_0()
 
 int read_channel_1()
 {
+	pthread_mutex_lock(&lock_res);
 	//command to read on DATA0LOW register
 	register_data = WRITE_COMMAND | DATA1LOW_REGISTER;
 
@@ -233,6 +244,7 @@ int read_channel_1()
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
+	pthread_mutex_unlock(&lock_res);
 	// printf("CH1 %d\n",CH1);
 	return SUCCESS;
 

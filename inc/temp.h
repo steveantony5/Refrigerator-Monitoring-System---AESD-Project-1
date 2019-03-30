@@ -52,6 +52,8 @@ typedef enum pointer_reg{
 	thighReg
 }pointer_reg;
 
+extern pthread_mutex_t lock_res;
+
 
 /**
 --------------------------------------------------------------------------------------------

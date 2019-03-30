@@ -10,7 +10,7 @@ timer_t timer_id_temp, timer_id_lux , timer_id_heartbeat;
 
 pthread_t temperature_thread , lux_thread;
 
-pthread_mutex_t lock;
+pthread_mutex_t lock_res;
 
 int Pulse_temp = 0;
 int Pulse_lux = 0;
@@ -92,7 +92,7 @@ void *temperature_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
-			pthread_mutex_lock(&lock);
+			// pthread_mutex_lock(&lock_res);
 
 			if(temp_read() == ERROR)
 			{
@@ -134,7 +134,7 @@ void *temperature_task()
 				printf("Alert Pin state = %d\n",alert);
 			}
 
-			pthread_mutex_unlock(&lock);
+			// pthread_mutex_unlock(&lock_res);
 
 			
         	FLAG_READ_TEMP = 0;
@@ -186,7 +186,7 @@ void *lux_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
-			pthread_mutex_lock(&lock);
+			// pthread_mutex_lock(&lock_res);
 
 			usleep(500);
 			if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
@@ -243,7 +243,7 @@ void *lux_task()
 			//printf("CH0 %d\n",CH0);
 			//printf("CH1 %d\n",CH1);
 
-			pthread_mutex_unlock(&lock);
+			// pthread_mutex_unlock(&lock_res);
 
 		
         	FLAG_READ_LUX = 0;
@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
 	gpio_pin_init();
 	led_off();
 
-	if (pthread_mutex_init(&lock, NULL) != 0) 
+	if (pthread_mutex_init(&lock_res, NULL) != 0) 
     { 
         perror("Mutex init failed\n"); 
         return ERROR; 

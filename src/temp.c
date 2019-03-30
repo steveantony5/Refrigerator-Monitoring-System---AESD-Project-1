@@ -35,7 +35,9 @@ int config_reg_write_update(uint16_t bit_mask, bool clear)
 
 	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -52,7 +54,9 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 
 	uint8_t readBytes[2];
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -74,14 +78,20 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 
 int temp_sensor_init()
 {
-	return i2c_setup(&file_des_temp,2,TEMP_ADDR); 
+	pthread_mutex_lock(&lock_res);
+	int ret_val = i2c_setup(&file_des_temp,2,TEMP_ADDR); 
+	pthread_mutex_unlock(&lock_res);
+	
+	return ret_val;
 }
 
 int pointer_reg_write(pointer_reg reg)
 {
 	int8_t buffer = reg;
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = write(file_des_temp, &buffer, sizeof(buffer));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -99,7 +109,9 @@ int config_reg_read(uint16_t *configuration)
 
 	uint8_t readBytes[2] = {0};
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -127,7 +139,9 @@ int config_reg_write_default()
 
 	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -222,7 +236,11 @@ int tlow_reg_write(uint8_t temp_in_C)
 	pointer_reg_write(tlowReg);
 
 	uint8_t writeBytes[2] = {tlowReg, temp_in_C};
+
+	pthread_mutex_lock(&lock_res);
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
 	if(ret_val == ERROR)
 	{
 		perror("Error on writing TLOW REGISTER");
@@ -237,7 +255,11 @@ int thigh_reg_write(uint8_t temp_in_C)
 {
 	pointer_reg_write(tlowReg);
 	uint8_t writeBytes[2] = {thighReg, temp_in_C};
+	
+	pthread_mutex_lock(&lock_res);
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
 	if(ret_val == ERROR)
 	{
 		perror("Error on writing THIGH REGISTER");
@@ -258,7 +280,10 @@ int tlow_reg_read()
 
 	int8_t readBytes[2] = {0};
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
 	if(ret_val == ERROR)
 	{
 		perror("Error on reading TLOW REGISTER");
@@ -281,14 +306,17 @@ int thigh_reg_read()
 {
 	uint8_t higherByte;
 	uint8_t lowerByte;
-
+	
 	pointer_reg_write(thighReg);
 
 	uint16_t measured_thigh;
 
 	int8_t readBytes[2] = {0};
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
 	if(ret_val == ERROR)
 	{
 		perror("Error on reading TLOW REGISTER");
@@ -301,6 +329,7 @@ int thigh_reg_read()
 	/* Formatting the temperature value received according to the datasheet */
 	measured_thigh = (higherByte << 8) | lowerByte;
 	measured_thigh = measured_thigh >> 4;
+
 
 	return measured_thigh;
 }
@@ -315,7 +344,9 @@ int temp_read()
 
 	pointer_reg_write(tempReg);
 
+	pthread_mutex_lock(&lock_res);
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
 
 	if(ret_val == ERROR)
 	{
@@ -336,7 +367,6 @@ int temp_read()
 		measured_temperature = (~(measured_temperature) + 1) & 0xFFF;
 		measured_temperature = -1 * measured_temperature;
 	}
-
 
 	return measured_temperature;
 }
