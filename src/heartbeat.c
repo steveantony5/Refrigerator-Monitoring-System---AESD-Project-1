@@ -383,6 +383,7 @@ int main(int argc, char *argv[])
 
 void hanler_kill_temp(int num)
 {
+	printf("Encountered SIGUSR1 signal\nExiting temperature thread\n");
 	close(fd1_w);
 	stop_timer(timer_id_temp);
 	pthread_cancel(temperature_thread); 
@@ -390,6 +391,7 @@ void hanler_kill_temp(int num)
 
 void hanler_kill_lux(int num)
 {
+	printf("Encountered SIGUSR2 signal\nExiting lux thread\n");
 	close(fd2_w);
 	stop_timer(timer_id_lux);
 	pthread_cancel(lux_thread); 
@@ -398,6 +400,7 @@ void hanler_kill_lux(int num)
 
 void hanler_kill_main(int num)
 {
+	printf("Encountered SIGTERM signal\nExiting main thread\n");
 	close(fd1);
 	close(fd2);
 	close(fd3);
@@ -418,6 +421,7 @@ void hanler_kill_main(int num)
 
 void hanler_kill_log(int num)
 {
+	printf("Encountered SIGALRM signal\nExiting log thread\n");
 	close(fd3_w);
 	stop_timer(timer_id_log);
 	pthread_cancel(logger_thread); 
