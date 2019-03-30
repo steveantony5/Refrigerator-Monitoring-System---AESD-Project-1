@@ -23,6 +23,10 @@ int Pulse_log_prev = 0;
 int FLAG_READ_TEMP = 0;
 int FLAG_READ_LUX = 0;
 
+int logger_thread_creation = 0;
+int remote_socket_thread_creation = 0;
+int temperature_thread_creation = 0;
+int lux_thread_creation = 0;
 /*******************************
 	Globals Temp thread
 ********************************/
@@ -267,6 +271,29 @@ int startup_test()
 		return ERROR;
 	}
 
+	if(!remote_socket_thread_creation)
+	{
+		perror("Sartup remote request thread creation test failed");
+		return ERROR;
+	}
+
+	if(!temperature_thread_creation)
+	{
+		perror("Sartup temperature thread creation test failed");
+		return ERROR;
+	}
+
+	if(!lux_thread_creation)
+	{
+		perror("Sartup lux thread creation test failed");
+		return ERROR;
+	}
+
+	if(!logger_thread_creation)
+	{
+		perror("Sartup logger thread creation test failed");
+		return ERROR;
+	}
 	return SUCCESS;
 }
 
@@ -282,6 +309,7 @@ int main(int argc, char *argv[])
 		exit(ERROR);
 	}
 
+	pid_t pid = getpid();
 	printf("\n\nPID of the process - %d\n",getpid());
 
 	signal(SIGUSR1,hanler_kill_temp);
@@ -322,15 +350,46 @@ int main(int argc, char *argv[])
 	pthread_attr_t attr;
 	pthread_attr_init(&attr); 
 
-	pthread_create(&logger_thread, &attr, logger_thread_callback, (void *)&fd);
+	if(pthread_create(&logger_thread, &attr, logger_thread_callback, (void *)&fd) != 0)
+	{
+		perror("Logger thread creation failed");
+	}
+	else
+	{
+		logger_thread_creation = 1;
+	}
 	
-	pthread_create(&temperature_thread, &attr, temperature_task, NULL);	
+	if(pthread_create(&temperature_thread, &attr, temperature_task, NULL) != 0) 	
+	{
+		perror("Temperature thread creation failed");
+	}
+	else
+	{
+		temperature_thread_creation = 1;
+	}
+	
+	if(pthread_create(&lux_thread, &attr, lux_task, NULL) != 0)
+	{
+		perror("Lux thread creation failed");
+	}
+	else
+	{
+		lux_thread_creation = 1;
+	}
 
-	pthread_create(&lux_thread, &attr, lux_task, NULL);	
+	if(pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd) != 0)
+	{
+		perror("Reomte socket thread creation failed");
+	}
+	else
+	{
+		remote_socket_thread_creation = 0;
+	}
 
-	pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd);
-
-
+	if(!startup_test())
+		printf("Startup test passed!\n");
+	else
+		kill(pid, 15);
 
 	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
 	if(fd1 < 0)
@@ -349,8 +408,6 @@ int main(int argc, char *argv[])
 	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
 	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
 	
-	if(!startup_test())
-		printf("Startup test passed!\n");
 
 	while(1)
 	{
@@ -373,8 +430,6 @@ int main(int argc, char *argv[])
 			Pulse_log++;
 		}
 
-		
-		
 	}
 
 	//wait till the child completes

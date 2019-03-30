@@ -39,10 +39,10 @@ void hanler_kill_main(int num);
 
 
 // FIFO file path 
- extern char * Temp;
- extern char * Lux ;
- extern char * log_t;
- extern uint16_t CH0;
+extern char * Temp;
+extern char * Lux ;
+extern char * log_t;
+extern uint16_t CH0;
 extern uint16_t CH1;
 extern int file_des_lux;
 extern timer_t timer_id_log;
