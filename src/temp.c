@@ -64,14 +64,14 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 		return ERROR;
 	}
 
-	printf("conversion rate prior1 = %x\n", readBytes[0]);
-	printf("conversion rate prior 2 = %x\n\n", readBytes[1]);
+	// printf("conversion rate prior1 = %x\n", readBytes[0]);
+	// printf("conversion rate prior 2 = %x\n\n", readBytes[1]);
 
 	/*Reads the required bits from the byte*/
 	readBytes[byte] &= bit_mask;
 	readBytes[byte] = readBytes[byte] >> shift;
 
-	printf("bits = %x\n", readBytes[byte]);
+	// printf("bits = %x\n", readBytes[byte]);
 
 	return readBytes[byte];
 }

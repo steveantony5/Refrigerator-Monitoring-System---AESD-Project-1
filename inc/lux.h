@@ -23,6 +23,7 @@
 
 #define WRITE_COMMAND (0x80)
 #define WRITE_COMMAND_WORD (0xA0)
+#define CLEAR_PENDING_INTERUPTS (0x40)
 
 extern pthread_mutex_t lock_res;
 

@@ -112,17 +112,17 @@ void *temperature_task()
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
 
-				printf("Temperatue in celcius = %f\n", temperature_celcius);
+				//printf("Temperatue in celcius = %f\n", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
-				printf("T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
+				//printf("T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
-				printf("T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
+				//printf("T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				int alert = config_read_alert();
@@ -131,7 +131,7 @@ void *temperature_task()
 					led_off();
 				else
 					led_on();
-				printf("Alert Pin state = %d\n",alert);
+				//printf("Alert Pin state = %d\n",alert);
 			}
 
 			// pthread_mutex_unlock(&lock_res);
@@ -205,7 +205,7 @@ void *lux_task()
 				// led_off();
 				// printf("LED OFF LUX\n");
 				lux = lux_measurement(CH0,CH1);
-				// printf("lux %f\n",lux);
+				printf("lux %f\n",lux);
 
 				has_state_transition_occurred(lux);
 
@@ -216,7 +216,7 @@ void *lux_task()
 				fridge_state  = get_current_state_fridge(lux);
 				if(fridge_state == BRIGHT)
 				{
-					printf("Fridge Door is open\n");
+					//printf("Fridge Door is open\n");
 					memset(buffer,0,MAX_BUFFER_SIZE);
 					sprintf(buffer,"Fridge state - Door opened\n");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -224,7 +224,7 @@ void *lux_task()
 				}
 				else if(fridge_state == DARK)
 				{
-					printf("Fridge Door is close\n");
+					//printf("Fridge Door is close\n");
 					memset(buffer,0,MAX_BUFFER_SIZE);
 					sprintf(buffer,"Fridge state - Door Closed\n");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -240,7 +240,7 @@ void *lux_task()
 
 			}
 
-			//printf("CH0 %d\n",CH0);
+			printf("CH0 %d\n",CH0);
 			//printf("CH1 %d\n",CH1);
 
 			// pthread_mutex_unlock(&lock_res);
@@ -260,9 +260,9 @@ void beat_timer_handler(union sigval val)
 {
 	char buffer[MAX_BUFFER_SIZE];
 
-	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
-	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	// printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
+	// printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
+	// printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 
 	if(Pulse_temp <= Pulse_temp_prev)
 	{
@@ -319,13 +319,18 @@ int startup_test()
 		temp_dead_flag = 1;
 	}
 
+	if(indication_register() == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
+
 	ret_val = (int)get_lux();
 	if(ret_val == ERROR)
 	{
 		perror("Sartup lux value test failed");
 		lux_dead_flag = 1;
 	}
-
 
 	if(!remote_socket_thread_creation)
 	{
@@ -376,7 +381,6 @@ int main(int argc, char *argv[])
 	signal(SIGUSR2,hanler_kill_lux);
 	signal(SIGTERM,hanler_kill_main);
 	signal(SIGALRM,hanler_kill_log);
-	//signal(SIGHUP,hanler_kill_Remote);
 
 	file_descriptors fd;
 	
@@ -460,13 +464,8 @@ int main(int argc, char *argv[])
 	if(fd3 < 0)
        	perror("error on opening fd3 Lux heartbeat\n");
 
-	char pulse[1];
-
-	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
-	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
-	
-	sleep(0.2);
-	int ret_val = startup_test();
+    sleep(1);
+    int ret_val = startup_test();
 	if(!ret_val)
 		printf("Startup test passed!\n");
 	else
@@ -478,6 +477,14 @@ int main(int argc, char *argv[])
 		if(logger_dead_flag)
 			kill(pid, SIGALRM);
 	}
+
+	char pulse[1];
+
+	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
+	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
+	
+	
+	
 	// else if(ret_val == 2)
 	// {	
 	// 	kill(pid, SIGUSR2);

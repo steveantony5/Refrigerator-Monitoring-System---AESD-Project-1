@@ -27,7 +27,7 @@ int lux_sensor_setup()
 	}
 
 	//command to write on control register
-	register_data = WRITE_COMMAND | CONTROL_REGISTER;
+	register_data = WRITE_COMMAND | CONTROL_REGISTER |CLEAR_PENDING_INTERUPTS;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
@@ -90,7 +90,7 @@ int lux_sensor_setup()
 	}
 
 	//value for the control registe16
-	register_data_word = 0x03E8; //set to 1000
+	register_data_word = 0x0BB8; //set to 3000
 
 	if (write(file_des_lux, &register_data_word, 2) == ERROR)
 	{
@@ -99,7 +99,7 @@ int lux_sensor_setup()
 	}
 
 	//command to write on control register  for Interupt register 
-	register_data = WRITE_COMMAND | INTERRUPT;
+	register_data = WRITE_COMMAND | INTERRUPT | CLEAR_PENDING_INTERUPTS;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
 	{
@@ -292,7 +292,7 @@ float lux_measurement(float CH0, float CH1)
 void has_state_transition_occurred(float lux)
 {
 	static float prev_lux = 0;
-	if((lux > 200) && (prev_lux <200))
+	if((lux > 70) && (prev_lux <70))
 	{
 		printf("State changed from Dark to Bright\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
@@ -300,7 +300,7 @@ void has_state_transition_occurred(float lux)
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	}
-	else if((lux < 200) && (prev_lux > 200))
+	else if((lux < 70) && (prev_lux > 70))
 	{
 		printf("State changed from Bright to Dark\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
@@ -309,7 +309,7 @@ void has_state_transition_occurred(float lux)
 
 		//clering the interrupt
 		//command to write on control register  for Interupt register 
-		register_data = 0xC0 ;
+		register_data = CLEAR_PENDING_INTERUPTS | WRITE_COMMAND ;
 
 		if (write(file_des_lux, &register_data, 1) == ERROR)
 		{
@@ -342,9 +342,9 @@ float get_lux()
 enum Status get_current_state_fridge(float value)
 {
 	
-	if(value > 200)
+	if(value > 70)
 		return BRIGHT;
-	if(value < 200)
+	if(value <= 70)
 		return DARK;
 	else
 		return ERROR;
