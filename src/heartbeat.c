@@ -193,8 +193,7 @@ void *lux_task()
 
 			pthread_mutex_unlock(&lock);
 
-			printf("Lux thread cancelled\n");
-        	pthread_cancel(lux_thread);
+		
         	FLAG_READ_LUX = 0;
 
 
