@@ -331,6 +331,8 @@ int main(int argc, char *argv[])
 
 	pthread_create(&lux_thread, &attr, lux_task, NULL);	
 
+	pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd);
+
 
 
 	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
@@ -381,8 +383,8 @@ int main(int argc, char *argv[])
 	//wait till the child completes
 	pthread_join(temperature_thread,NULL);
 	pthread_join(lux_thread,NULL);
-
 	pthread_join(logger_thread, NULL);
+	pthread_join(remote_request_thread, NULL);
 
 	
 
