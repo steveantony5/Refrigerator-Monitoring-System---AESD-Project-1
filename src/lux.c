@@ -17,6 +17,12 @@ uint16_t CH1;
 int lux_sensor_setup()
 {
 
+	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
+	{
+		perror("Error on i2c bus set up for lux sensor");
+		return ERROR;
+	}
+
 	//command to write on control register
 	register_data = WRITE_COMMAND | CONTROL_REGISTER;
 
@@ -176,7 +182,7 @@ float lux_measurement(float CH0, float CH1)
 
 	else
 	{
-		printf("Invalid\n");
+		printf("Invalid Lux measurement\n");
 		return ERROR;
 	}
 
@@ -205,4 +211,19 @@ void has_state_transition_occurred(float lux)
 	prev_lux = lux;
 
 
+}
+
+float get_lux()
+{
+	if((read_channel_0() != ERROR) && (read_channel_1() != ERROR))
+	{
+		return ERROR;
+	}
+
+	else
+	{
+		
+		return lux_measurement(CH0,CH1);
+		
+	}
 }

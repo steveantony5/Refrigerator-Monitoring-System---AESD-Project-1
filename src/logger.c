@@ -23,15 +23,6 @@ char *time_stamp()
 	return time_stam;	
 }
 
-float get_temperature()
-{
-	return 25.064;
-}
-
-float get_lux()
-{
-	return 2.56;
-}
 
 void logger_init(char *file_path)
 {

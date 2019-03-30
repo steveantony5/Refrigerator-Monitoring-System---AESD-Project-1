@@ -142,10 +142,7 @@ void *lux_task()
 	fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	
-	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
-	{
-		perror("Error on i2c bus set up for lux sensor");
-	}
+	
 
 	if(lux_sensor_setup()<0)
 	{
@@ -167,7 +164,7 @@ void *lux_task()
 
 			pthread_mutex_lock(&lock);
 
-			if(read_channel_0() == ERROR || read_channel_1() == ERROR)
+			if((read_channel_0() != ERROR) && (read_channel_1() != ERROR))
 			{
 				led_on();
 				printf("LED OFF LUX\n");

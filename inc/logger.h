@@ -47,9 +47,6 @@ void logger_init(char *);
 
 void *logger_thread_callback(void *);
 
-float get_temperature();
-
-float get_lux();
 
 char buffer[MAX_BUFFER_SIZE];
 pthread_t logger_thread;

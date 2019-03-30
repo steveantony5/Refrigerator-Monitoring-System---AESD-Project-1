@@ -102,40 +102,83 @@ void *remote_request_callback(void *arg)
     	 //receiving from the other process
          if(recv(new_socket, message ,MAX_BUFFER_SIZE, 0))
          {
-         	LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(), message);
-         	printf("Received: %s\n",message);
 
          	if(strcmp(message,"tempc") == 0)
          	{
-         		LOG_MESSAGE(file_name,"%s %s %f\n", log_level[0], time_stamp(), temp_in_celcius());
-         		printf("Temperature = %f\n", temp_in_celcius());
-                sprintf(buffer,"Temperature in Celcius = %f\n",temp_in_celcius());
+
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+         		printf("tempc Request sent to remote request\n");
+                float tempc = temp_in_celcius();
+                if(tempc == ERROR)
+                {
+                    sprintf(buffer,"Error on temperature sensor\n");
+                }
+                else
+                {
+                    sprintf(buffer,"Temperature in Celcius = %f\n",tempc);
+                }
+
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
          	}
 
             else if(strcmp(message,"tempk") == 0)
             {
-                LOG_MESSAGE(file_name,"%s %s %f\n", log_level[0], time_stamp(), temp_in_kelvin());
-                printf("Temperature = %f\n", temp_in_kelvin());
-                sprintf(buffer,"Temperature in Kelvin = %f\n",temp_in_kelvin());
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+                printf("tempk Request sent to remote request\n");
+                float tempk = temp_in_celcius();
+                if(tempk == ERROR)
+                {
+                    sprintf(buffer,"Error on temperature sensor\n");
+                }
+                else
+                {
+                    sprintf(buffer,"Temperature in Kelvin = %f\n",(tempk+273.15));
+                }
+
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
 
             else if(strcmp(message,"tempf") == 0)
             {
-                LOG_MESSAGE(file_name,"%s %s %f\n", log_level[0], time_stamp(), temp_in_fahrenheit());
-                printf("Temperature = %f\n", temp_in_fahrenheit());
-                sprintf(buffer,"Temperature in Fahrenheit = %f\n",temp_in_fahrenheit());
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+                printf("tempf Request sent to remote request\n");
+                float tempf = temp_in_celcius();
+                if(tempf == ERROR)
+                {
+                    sprintf(buffer,"Error on temperature sensor\n");
+                }
+                else
+                {
+                    sprintf(buffer,"Temperature in Farenheit = %f\n",((tempf * 9/5) + 32));
+                }
+
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
 
          	else if(strcmp(message,"lux") == 0)
          	{
-         		LOG_MESSAGE(file_name,"%s %s %f\n", log_level[0], time_stamp(), get_lux());
-         		printf("Lux = %f\n", get_lux());
-                sprintf(buffer,"Lux = %f\n",get_lux());
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+                printf("tempk Request sent to remote request\n");
+                float lux = get_lux();
+                if(lux == ERROR)
+                {
+                    sprintf(buffer,"Error on lux sensor\n");
+                }
+                else
+                {
+                    sprintf(buffer,"brightness in lux = %f\n",lux);
+                }
+
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+
          	}
+            else
+            {
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+                printf("Invalid remote request\n");
+                sprintf(buffer,"Invalid remote request\n");
+                send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+            }
          }
     }
 }

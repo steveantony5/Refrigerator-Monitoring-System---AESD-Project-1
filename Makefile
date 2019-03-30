@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 vpath %.c src/
-SRC :=  i2c.c logger.c heartbeat.c POSIX_timer.c lux.c temp.c
+SRC :=  i2c.c logger.c heartbeat.c POSIX_timer.c lux.c temp.c led.c remote_request.c
 
 OBJ :=$(SRC:.c=.o)
 OP = main
