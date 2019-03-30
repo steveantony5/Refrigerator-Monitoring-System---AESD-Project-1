@@ -112,7 +112,7 @@ void *temperature_task()
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
 
-				//printf("Temperatue in celcius = %f\n", temperature_celcius);
+				printf("Temperatue in celcius = %f\n", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
@@ -483,23 +483,6 @@ int main(int argc, char *argv[])
 	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
 	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
 	
-	
-	
-	// else if(ret_val == 2)
-	// {	
-	// 	kill(pid, SIGUSR2);
-	// 	kill(pid, SIGUSR1);
-	// }
-	// else if(ret_val == 3)
-	// 	kill(pid, SIGUSR1);
-
-	// else if(ret_val == 4)
-	// 	kill(pid, SIGUSR2);
-
-	// else if(ret_val == LOGGER_ERROR)
-	// 	kill(pid, SIGALRM);
-
-
 	while(1)
 	{
 		memset(pulse,0,1);

@@ -2,7 +2,7 @@
 
 int led_on()
 {
-	FILE *file_ptr = fopen("/sys/class/gpio/gpio49/value", "w");
+	FILE *file_ptr = fopen("/sys/class/gpio/gpio53/value", "w");
 	
 	fputc('0', file_ptr);
 	fclose(file_ptr);	
@@ -12,7 +12,7 @@ int led_on()
 
 int led_off()
 {
-	FILE *file_ptr = fopen("/sys/class/gpio/gpio49/value", "w");
+	FILE *file_ptr = fopen("/sys/class/gpio/gpio53/value", "w");
 	
 	fputc('1', file_ptr);
 	fclose(file_ptr);	
@@ -24,10 +24,10 @@ int gpio_pin_init()
 {
 	FILE *file_ptr = fopen("/sys/class/gpio/export", "w");
 	
-	fprintf(file_ptr,"%d",49);
+	fprintf(file_ptr,"%d",53);
 	fclose(file_ptr);
 
-	file_ptr = fopen("/sys/class/gpio/gpio49/direction", "w+");
+	file_ptr = fopen("/sys/class/gpio/gpio53/direction", "w+");
 
 	fprintf(file_ptr,"out");
 	fclose(file_ptr);
