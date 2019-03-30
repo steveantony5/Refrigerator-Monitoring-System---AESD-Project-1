@@ -27,6 +27,12 @@ int logger_thread_creation = 0;
 int remote_socket_thread_creation = 0;
 int temperature_thread_creation = 0;
 int lux_thread_creation = 0;
+
+
+int temp_dead_flag = 0;
+int lux_dead_flag = 0;
+int remote_socket_dead_flag = 0;
+int logger_dead_flag = 0;
 /*******************************
 	Globals Temp thread
 ********************************/
@@ -185,7 +191,7 @@ void *lux_task()
 				// led_off();
 				// printf("LED OFF LUX\n");
 				lux = lux_measurement(CH0,CH1);
-				printf("lux %f\n",lux);
+				// printf("lux %f\n",lux);
 
 				has_state_transition_occurred(lux);
 
@@ -214,9 +220,9 @@ void beat_timer_handler(union sigval val)
 {
 	char buffer[MAX_BUFFER_SIZE];
 
-	// printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
-	// printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	// printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
+	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
+	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 
 	if(Pulse_temp <= Pulse_temp_prev)
 	{
@@ -258,43 +264,56 @@ int startup_test()
 {
 	int ret_val;
 
+	
 	ret_val = temp_sensor_init();
 	if(ret_val != 0)
 	{
 		perror("Satrup test temperature init failed");
-		return ERROR;
+		temp_dead_flag = 1;
 	}
 
-	ret_val = temp_in_celcius();
+	ret_val = (int)temp_in_celcius();
 	if(ret_val <-40 && ret_val > 128)
 	{
 		perror("Sartup temperature value test failed");
-		return ERROR;
+		temp_dead_flag = 1;
 	}
+
+	ret_val = (int)get_lux();
+	if(ret_val == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
+
 
 	if(!remote_socket_thread_creation)
 	{
 		perror("Sartup remote request thread creation test failed");
-		return ERROR;
+		remote_socket_dead_flag = 1;
 	}
 
 	if(!temperature_thread_creation)
 	{
 		perror("Sartup temperature thread creation test failed");
-		return ERROR;
+		temp_dead_flag = 1;
 	}
 
 	if(!lux_thread_creation)
 	{
 		perror("Sartup lux thread creation test failed");
-		return ERROR;
+		lux_dead_flag = 1;
 	}
 
 	if(!logger_thread_creation)
 	{
 		perror("Sartup logger thread creation test failed");
-		return ERROR;
+		logger_dead_flag = 1;
 	}
+
+	if(temp_dead_flag || lux_dead_flag || remote_socket_dead_flag || logger_dead_flag)
+		return ERROR;
+	
 	return SUCCESS;
 }
 
@@ -359,6 +378,7 @@ int main(int argc, char *argv[])
 	{
 		logger_thread_creation = 1;
 	}
+
 	
 	if(pthread_create(&temperature_thread, &attr, temperature_task, NULL) != 0) 	
 	{
@@ -369,6 +389,7 @@ int main(int argc, char *argv[])
 		temperature_thread_creation = 1;
 	}
 	
+
 	if(pthread_create(&lux_thread, &attr, lux_task, NULL) != 0)
 	{
 		perror("Lux thread creation failed");
@@ -384,13 +405,8 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		remote_socket_thread_creation = 0;
+		remote_socket_thread_creation = 1;
 	}
-
-	if(!startup_test())
-		printf("Startup test passed!\n");
-	else
-		kill(pid, 15);
 
 	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
 	if(fd1 < 0)
@@ -409,6 +425,33 @@ int main(int argc, char *argv[])
 	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
 	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
 	
+	sleep(0.2);
+	int ret_val = startup_test();
+	if(!ret_val)
+		printf("Startup test passed!\n");
+	else
+	{
+		if(temp_dead_flag)
+			kill(pid, SIGUSR1);
+		if(lux_dead_flag)
+			kill(pid, SIGUSR2);
+		if(logger_dead_flag)
+			kill(pid, SIGALRM);
+	}
+	// else if(ret_val == 2)
+	// {	
+	// 	kill(pid, SIGUSR2);
+	// 	kill(pid, SIGUSR1);
+	// }
+	// else if(ret_val == 3)
+	// 	kill(pid, SIGUSR1);
+
+	// else if(ret_val == 4)
+	// 	kill(pid, SIGUSR2);
+
+	// else if(ret_val == LOGGER_ERROR)
+	// 	kill(pid, SIGALRM);
+
 
 	while(1)
 	{

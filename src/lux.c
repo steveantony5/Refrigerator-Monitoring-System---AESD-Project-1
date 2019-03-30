@@ -101,7 +101,7 @@ int read_channel_0()
 
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
-	printf("CH0 %d\n",CH0);
+	// printf("CH0 %d\n",CH0);
 	return SUCCESS;
 
 
@@ -144,7 +144,7 @@ int read_channel_1()
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
-	printf("CH1 %d\n",CH1);
+	// printf("CH1 %d\n",CH1);
 	return SUCCESS;
 
  
