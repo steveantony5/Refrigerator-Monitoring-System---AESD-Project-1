@@ -46,8 +46,6 @@ void *temperature_task()
 
 	temp_sensor_init();
 
-	config_reg_read(&configuration);
-
 	tlow_reg_write(10);
 
 	thigh_reg_write(100);
@@ -55,19 +53,6 @@ void *temperature_task()
 	config_reg_write_default();
 
 	config_reg_read(&configuration);
-
-	config_read_conversion_rate();
-
-	config_reg_read(&configuration);
-
-	config_sd();
-
-	config_reg_read(&configuration);
-
-	config_sd_continuous();
-
-	config_reg_read(&configuration);
-
 
 	while(1)
 	{
@@ -83,22 +68,30 @@ void *temperature_task()
 
 			pthread_mutex_lock(&lock);
 
-			float temperature_celcius = temp_read() * 0.0625;
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
-			//printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			if(temp_read() == -1)
+			{
+				printf("Temperatue sensor error, trying to reconnect\n");
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"Temperatue sensor error,  trying to reconnect");
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
 
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			else
+			{
+				float temperature_celcius = temp_read() * 0.0625;
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
+				//printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-
-			
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
 
 			pthread_mutex_unlock(&lock);
 
@@ -132,23 +125,16 @@ void *lux_task()
 	int fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	
-	reboot:
-	if(FLAG_READ_LUX)
-	{
-		write(fd2_w, "L", 1);
-		FLAG_READ_LUX = 0;
-	}
-
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
-		goto reboot;
+		// goto end;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
-		goto reboot;
+		// goto end;
 	}
 
 	while(1)
@@ -165,43 +151,43 @@ void *lux_task()
 
 
 			pthread_mutex_lock(&lock);
-			if(read_channel_0()<0)
+
+			if(read_channel_0() < 0 || read_channel_1() < 0)
 			{
-				perror("Error on reading channel 0\n");
-				goto reboot;
+				perror("Error on reading channels\n");
+				printf("LUx sensor error, trying to reconnect\n");
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"Lux sensor error,  trying to reconnect");
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			}
 
-			if(read_channel_1()<0)
+			else
 			{
-				perror("Error on reading channel 0\n");
-				goto reboot;
+
+				lux = lux_measurement(CH0,CH1);
+				//printf("lux %f\n",lux);
+
+				has_state_transition_occurred(lux);
+
+				memset(buffer,0,MAX_BUFFER_SIZE);
+				sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			}
 
 			//printf("CH0 %d\n",CH0);
 			//printf("CH1 %d\n",CH1);
 
-			lux = lux_measurement(CH0,CH1);
-			//printf("lux %f\n",lux);
-
-			has_state_transition_occurred(lux);
-
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
-
-			
-
 			pthread_mutex_unlock(&lock);
 
 		
         	FLAG_READ_LUX = 0;
-
-
-			 	
-
 		}
 	}
+	// end:
 	close(fd2_w);
+	printf("Cacnelling lux thread\n");
+	// pthread_cancel(lux_thread);
+	return 0;
 }
 /*****************************************************************
 					Heart_beat checker
@@ -337,6 +323,8 @@ int main(int argc, char *argv[])
 	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
 	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
 	
+	if(!startup_test())
+		printf("Startup test passed!\n");
 
 	while(1)
 	{
