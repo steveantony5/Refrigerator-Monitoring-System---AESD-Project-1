@@ -23,7 +23,7 @@ int lux_sensor_setup()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the control register\n");
-		return -1;
+		return ERROR;
 	}
 
 	//value for the control register
@@ -32,7 +32,7 @@ int lux_sensor_setup()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the control register\n");
-		return -1;
+		return ERROR;
 	}
 
 	//command to write on timing register
@@ -41,7 +41,7 @@ int lux_sensor_setup()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the control register\n");
-		return -1;
+		return ERROR;
 	}
 
 	//value for the control registe16
@@ -50,10 +50,10 @@ int lux_sensor_setup()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the timing register\n");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 
 }
 
@@ -65,14 +65,14 @@ int read_channel_0()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the command register\n");
-		return -1;
+		return ERROR;
 	}
 
 
 	if (read(file_des_lux, &LSB_0, 1) == -1)
 	{
 		perror("Error on reading the DATA0LOW_REGISTER register\n");
-		return -1;
+		return ERROR;
 	}
 
 	//command to read on DATA0HIGH register
@@ -81,20 +81,20 @@ int read_channel_0()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the command register\n");
-		return -1;
+		return ERROR;
 	}
 
 
 	if (read(file_des_lux, &MSB_0, 1) == -1)
 	{
 		perror("Error on reading the DATA0HIGH_REGISTER register\n");
-		return -1;
+		return ERROR;
 	}
 
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
 
-	return 0;
+	return SUCCESS;
 
 
 }
@@ -107,14 +107,14 @@ int read_channel_1()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the command register\n");
-		return -1;
+		return ERROR;
 	}
 
 
 	if (read(file_des_lux, &LSB_1, 1) == -1)
 	{
 		perror("Error on reading the DATA1LOW_REGISTER register\n");
-		return -1;
+		return ERROR;
 	}
 
 	//command to read on DATA0HIGH register
@@ -123,20 +123,20 @@ int read_channel_1()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the command register\n");
-		return -1;
+		return ERROR;
 	}
 
 
 	if (read(file_des_lux, &MSB_1, 1) == -1)
 	{
 		perror("Error on reading the DATA1HIGH_REGISTER register\n");
-		return -1;
+		return ERROR;
 	}
 
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
-	return 0;
+	return SUCCESS;
 
  
 }
@@ -177,7 +177,7 @@ float lux_measurement(float CH0, float CH1)
 	else
 	{
 		printf("Invalid\n");
-		return -1;
+		return ERROR;
 	}
 
 

@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "logger.h"
 
 #include "i2c.h"
 

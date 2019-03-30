@@ -23,6 +23,20 @@ int Pulse_log_prev = 0;
 int FLAG_READ_TEMP = 0;
 int FLAG_READ_LUX = 0;
 
+/*******************************
+	Globals Temp thread
+********************************/
+int fd1_w;
+
+/*******************************
+	Globals Lux thread
+********************************/
+int fd2_w;
+
+/*******************************
+	Globals heart beat - main 
+********************************/
+int fd1, fd2, fd3;
 
 /*****************************************************************
 						temperature_thread
@@ -42,7 +56,7 @@ void *temperature_task()
 	kick_timer(timer_id_temp, Delay_NS);
 
 
-	int fd1_w = open(Temp, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	fd1_w = open(Temp, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	temp_sensor_init();
 
@@ -68,7 +82,7 @@ void *temperature_task()
 
 			pthread_mutex_lock(&lock);
 
-			if(temp_read() == -1)
+			if(temp_read() == ERROR)
 			{
 				printf("Temperatue sensor error, trying to reconnect\n");
 				memset(buffer,0,MAX_BUFFER_SIZE);
@@ -81,7 +95,6 @@ void *temperature_task()
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
-				//printf("Temperatue in celcius = %f\n", temp_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
@@ -122,19 +135,17 @@ void *lux_task()
 	kick_timer(timer_id_lux, Delay_NS);
 
 
-	int fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
-		// goto end;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
-		// goto end;
 	}
 
 	while(1)
@@ -152,7 +163,7 @@ void *lux_task()
 
 			pthread_mutex_lock(&lock);
 
-			if(read_channel_0() < 0 || read_channel_1() < 0)
+			if(read_channel_0() == ERROR || read_channel_1() == ERROR)
 			{
 				perror("Error on reading channels\n");
 				printf("LUx sensor error, trying to reconnect\n");
@@ -185,9 +196,7 @@ void *lux_task()
 	}
 	// end:
 	close(fd2_w);
-	printf("Cacnelling lux thread\n");
-	// pthread_cancel(lux_thread);
-	return 0;
+	return SUCCESS;
 }
 /*****************************************************************
 					Heart_beat checker
@@ -244,17 +253,17 @@ int startup_test()
 	if(ret_val != 0)
 	{
 		perror("Satrup test temperature init failed");
-		return 1;
+		return ERROR;
 	}
 
 	ret_val = temp_in_celcius();
 	if(ret_val <-40 && ret_val > 128)
 	{
-		perror("Satrup temperature value test failed");
-		return 1;
+		perror("Sartup temperature value test failed");
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 /***********************************************
@@ -266,8 +275,17 @@ int main(int argc, char *argv[])
 	if(argc < 3)
 	{
 		perror("Enter more arguments in terminal");
-		exit(0);
+		exit(ERROR);
 	}
+
+	printf("\n\nPID of the process - %d\n",getpid());
+
+	signal(SIGUSR1,hanler_kill_temp);
+	signal(SIGUSR2,hanler_kill_lux);
+	signal(SIGTERM,hanler_kill_main);
+	signal(SIGALRM,hanler_kill_log);
+	//signal(SIGHUP,hanler_kill_Remote);
+
 	file_descriptors fd;
 	
 	fd.file_name = argv[1];
@@ -289,7 +307,7 @@ int main(int argc, char *argv[])
 	if (pthread_mutex_init(&lock, NULL) != 0) 
     { 
         perror("Mutex init failed\n"); 
-        return -1; 
+        return ERROR; 
     }
 
 	file_ptr = fopen(file_name, "a+");
@@ -306,15 +324,15 @@ int main(int argc, char *argv[])
 
 
 
-	int fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
+	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
 	if(fd1 < 0)
        	perror("error on opening fd1 Temp heartbeat\n");
 
-	int fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+	fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
 	if(fd2 < 0)
        	perror("error on opening fd2 Lux heartbeat\n");
 
-    int fd3 = open(log_t,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+    fd3 = open(log_t,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
 	if(fd3 < 0)
        	perror("error on opening fd3 Lux heartbeat\n");
 
@@ -347,10 +365,7 @@ int main(int argc, char *argv[])
 			Pulse_log++;
 		}
 
-		/*
-		if(Pulse_temp > 20)
-			pthread_cancel(temperature_thread);
-*/
+		
 		
 	}
 
@@ -360,12 +375,51 @@ int main(int argc, char *argv[])
 
 	pthread_join(logger_thread, NULL);
 
+	
+
+	return SUCCESS;
+
+}
+
+void hanler_kill_temp(int num)
+{
+	close(fd1_w);
+	stop_timer(timer_id_temp);
+	pthread_cancel(temperature_thread); 
+}
+
+void hanler_kill_lux(int num)
+{
+	close(fd2_w);
+	stop_timer(timer_id_lux);
+	pthread_cancel(lux_thread); 
+
+}
+
+void hanler_kill_main(int num)
+{
 	close(fd1);
 	close(fd2);
 	close(fd3);
-
 	fclose(file_ptr);
 
-	return 0;
+	stop_timer(timer_id_heartbeat);
+
+	/* remove the FIFO */
+    
+    unlink(Lux);
+    unlink(Temp);
+    unlink(log_t);
+    exit(SUCCESS);
+
+
+	
+}
+
+void hanler_kill_log(int num)
+{
+	close(fd3_w);
+	stop_timer(timer_id_log);
+	pthread_cancel(logger_thread); 
 
 }

@@ -10,6 +10,7 @@ int FLAG_LOG;
 
 const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
 
+int fd3_w;
 
 pthread_mutex_t lock;
 
@@ -69,7 +70,7 @@ void *logger_thread_callback(void *arg)
     setup_timer_POSIX(&timer_id_log,log_timer_handler);
     kick_timer(timer_id_log, Delay_NS);
     
-    int fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+    fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
    	
    	while(1)
    	{

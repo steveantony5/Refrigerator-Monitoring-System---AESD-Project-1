@@ -38,6 +38,7 @@ typedef struct
 
 mqd_t msg_queue;
 
+enum Status{SUCCESS = 0, ERROR = -1};
 
 
 char *time_stamp();

@@ -37,13 +37,13 @@ int config_reg_write_update(uint16_t bit_mask, bool clear)
 
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on writing CONFIGURATION REGISTER");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
@@ -54,10 +54,10 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 
 	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on reading CONFIGURATION REGISTER");
-		return -1;
+		return ERROR;
 	}
 
 	printf("conversion rate prior1 = %x\n", readBytes[0]);
@@ -69,7 +69,7 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 
 	printf("bits = %x\n", readBytes[byte]);
 
-	return 0;
+	return SUCCESS;
 }
 
 int temp_sensor_init()
@@ -83,13 +83,13 @@ int pointer_reg_write(pointer_reg reg)
 
 	int ret_val = write(file_des_temp, &buffer, sizeof(buffer));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on writing POINTER REGISTER");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 int config_reg_read(uint16_t *configuration)
@@ -101,10 +101,10 @@ int config_reg_read(uint16_t *configuration)
 
 	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on reading CONFIGURATION REGISTER");
-		return -1;
+		return ERROR;
 	}
 
 	config = (readBytes[0] << 8 | readBytes[1]);
@@ -113,7 +113,7 @@ int config_reg_read(uint16_t *configuration)
 
 	*configuration = config;
 
-	return 0;
+	return SUCCESS;
 
 }
 
@@ -129,13 +129,13 @@ int config_reg_write_default()
 
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on writing CONFIGURATION REGISTER");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 int config_sd()
@@ -185,7 +185,7 @@ int config_conversion_rate_0_25HZ()
 	config_reg_write_update(CR0, 1);
 	config_reg_write_update(CR1, 1);
 
-	return 0;
+	return SUCCESS;
 
 }
 
@@ -194,7 +194,7 @@ int config_conversion_rate_1HZ()
 	config_reg_write_update(CR0, 0);
 	config_reg_write_update(CR1, 1);
 
-	return 0;
+	return SUCCESS;
 }
 
 int config_conversion_rate_4HZ()
@@ -202,7 +202,7 @@ int config_conversion_rate_4HZ()
 	config_reg_write_update(CR0, 1);
 	config_reg_write_update(CR1, 0);
 
-	return 0;
+	return SUCCESS;
 }
 
 int config_conversion_rate_8HZ()
@@ -210,7 +210,7 @@ int config_conversion_rate_8HZ()
 	config_reg_write_update(CR0, 0);
 	config_reg_write_update(CR1, 0);
 
-	return 0;
+	return SUCCESS;
 }
 
 int tlow_reg_write(uint8_t temp_in_C)
@@ -219,13 +219,13 @@ int tlow_reg_write(uint8_t temp_in_C)
 
 	uint8_t writeBytes[2] = {tlowReg, temp_in_C};
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on writing TLOW REGISTER");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 
 }
 
@@ -234,13 +234,13 @@ int thigh_reg_write(uint8_t temp_in_C)
 	pointer_reg_write(tlowReg);
 	uint8_t writeBytes[2] = {thighReg, temp_in_C};
 	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on writing THIGH REGISTER");
-		return -1;
+		return ERROR;
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 int tlow_reg_read()
@@ -255,10 +255,10 @@ int tlow_reg_read()
 	int8_t readBytes[2] = {0};
 
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on reading TLOW REGISTER");
-		return -1;
+		return ERROR;
 	}
 
 	higherByte = readBytes[0];
@@ -285,10 +285,10 @@ int thigh_reg_read()
 	int8_t readBytes[2] = {0};
 
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on reading TLOW REGISTER");
-		return -1;
+		return ERROR;
 	}
 
 	higherByte = readBytes[0];
@@ -313,10 +313,10 @@ int temp_read()
 
 	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
 
-	if(ret_val == -1)
+	if(ret_val == ERROR)
 	{
 		perror("Error on reading TEMPERATURE REGISTER");
-		return -1;
+		return ERROR;
 	}
 
 	higherByte = readBytes[0];
