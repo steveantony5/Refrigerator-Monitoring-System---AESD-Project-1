@@ -33,6 +33,17 @@ void lux_timer_handler(union sigval val)
 }
 
 /*****************************************************************
+					POSIX Timer Handler
+*****************************************************************/
+
+void log_timer_handler(union sigval val)
+{
+	FLAG_LOG = 1;
+
+	kick_timer(timer_id_log, Delay_NS);
+}
+
+/*****************************************************************
 					POSIX Timer configuration
 *****************************************************************/
 int setup_timer_POSIX(timer_t *timer_id,void (*handler)(union sigval))

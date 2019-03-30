@@ -5,6 +5,9 @@
 #include "logger.h"
 
 
+timer_t timer_id_log;
+int FLAG_LOG;
+
 const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
 
 
@@ -50,7 +53,7 @@ void logger_init(char *file_path)
     mq_attributes.mq_msgsize = MAX_BUFFER_SIZE;
     mq_attributes.mq_curmsgs = 10;
 
-    msg_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR, 0666, &mq_attributes);
+    msg_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR | O_NONBLOCK, 0666, &mq_attributes);
 }
 
 void *logger_thread_callback(void *arg)
@@ -62,18 +65,22 @@ void *logger_thread_callback(void *arg)
 
     sprintf(file_name,"%s%s/%s",LOG_PATH,fd->file_path,fd->file_name);
    	printf("File name = %s\n",file_name);
+
+    setup_timer_POSIX(&timer_id_log,log_timer_handler);
+    kick_timer(timer_id_log, Delay_NS);
     
     int fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
    	
    	while(1)
    	{
-        //write(fd3_w, "G", 1);
+        if(FLAG_LOG)
+        {
+            write(fd3_w, "G", 1);
+            FLAG_LOG = 0;
 
-        // memset(buffer,0,MAX_BUFFER_SIZE);
-        // sprintf(buffer,"Pulse from Log thread\n");
-        // mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+        }
 
-	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0))
+	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0) > 0)
 	    {
 			pthread_mutex_lock(&lock);
 			LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(), buffer);

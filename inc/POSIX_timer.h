@@ -23,15 +23,16 @@ int setup_timer_POSIX(timer_t *,void (*handler)(union sigval));
 int stop_timer(timer_t);
 void temp_timer_handler(union sigval);
 void lux_timer_handler(union sigval);
+void log_timer_handler(union sigval);
 
 /*****************************************************************
 						Globals
 *****************************************************************/
-extern timer_t timer_id_temp, timer_id_lux, timer_id_heartbeat;
+extern timer_t timer_id_temp, timer_id_lux, timer_id_heartbeat, timer_id_log;
 
 extern int FLAG_READ_TEMP;
 extern int FLAG_READ_LUX;
-
+extern int FLAG_LOG;
 /*****************************************************************
 						MACROS
 *****************************************************************/

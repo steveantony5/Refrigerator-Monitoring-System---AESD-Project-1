@@ -13,8 +13,8 @@
 #include <mqueue.h>
 #include <time.h>
 #include <sys/syscall.h>
+#include "POSIX_timer.h"
 
-FILE *file_ptr;
 
 #define LOG_PATH "./log_folder/"
 
@@ -27,7 +27,7 @@ FILE *file_ptr;
 #define QUEUE_NAME "/msg_queue"
 #define MAX_BUFFER_SIZE	100
 
-char buffer[MAX_BUFFER_SIZE];
+
 
 
 typedef struct
@@ -38,7 +38,7 @@ typedef struct
 
 mqd_t msg_queue;
 
-pthread_t logger_thread;
+
 
 char *time_stamp();
 
@@ -49,6 +49,10 @@ void *logger_thread_callback(void *);
 float get_temperature();
 
 float get_lux();
+
+char buffer[MAX_BUFFER_SIZE];
+pthread_t logger_thread;
+FILE *file_ptr;
 
  extern char * log_t;
 
