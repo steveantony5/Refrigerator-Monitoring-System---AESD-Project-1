@@ -42,7 +42,6 @@ extern int file_des_lux;
 						MACROS
 *****************************************************************/
 #define HEART_BEAT_CHECK_PERIOD (900000000)//200ms
-#define SIZE (20)
 
 
 #endif /* HEARTBEAT_H_ */

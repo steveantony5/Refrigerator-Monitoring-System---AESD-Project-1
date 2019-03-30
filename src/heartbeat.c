@@ -23,18 +23,6 @@ int Pulse_log_prev = 0;
 int FLAG_READ_TEMP = 0;
 int FLAG_READ_LUX = 0;
 
-#define PORT_NO_TEMP 8000
-#define PORT_NO_LUX  8001
-int temp_socket;
-int lux_socket;
-
-struct sockaddr_in server_address_temp;
-struct sockaddr_in server_address_lux;
-
-char * myfifo_temp = "/tmp/fifo_temp"; 
-char * myfifo_lux = "/tmp/fifo_lux"; 
-
-int fd1_pipe, fd2_pipe; 
 
 /*****************************************************************
 						temperature_thread
@@ -42,7 +30,6 @@ int fd1_pipe, fd2_pipe;
 void *temperature_task()
 {
 	char buffer[MAX_BUFFER_SIZE];
-	char buffer_req_temp[SIZE];
 
 	uint16_t configuration;
 
@@ -54,11 +41,8 @@ void *temperature_task()
 
 	kick_timer(timer_id_temp, Delay_NS);
 
-	mkfifo(Temp, 0666);
-	mkfifo(myfifo_temp, 0666); 
 
-	int fd1 = open(Temp, O_WRONLY);
-	fd1_pipe = open(myfifo_temp,O_RDWR|O_NONBLOCK);
+	int fd1_w = open(Temp, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	temp_sensor_init();
 
@@ -90,6 +74,13 @@ void *temperature_task()
 		if(FLAG_READ_TEMP)
 		{
 			
+			write(fd1_w, "T", 1);
+
+			memset(buffer,0,MAX_BUFFER_SIZE);
+			sprintf(buffer,"Pulse from temperature thread\n");
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+
 			pthread_mutex_lock(&lock);
 
 			float temperature_celcius = temp_read() * 0.0625;
@@ -107,62 +98,18 @@ void *temperature_task()
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
-			write(fd1, "T", 1);
+			
 
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Pulse from temperature thread\n");
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
-
-			FLAG_READ_TEMP = 0;
 			pthread_mutex_unlock(&lock);
 
-			memset(buffer_req_temp,0,SIZE);
-			read(fd1_pipe, buffer_req_temp, SIZE);
-			printf("noting received %s\n",buffer_req_temp);
-			if(strlen(buffer_req_temp)>0)
-        	{
-        		printf("Request received in temperature task\n");
-        		if(strcmp(buffer_req_temp,"temp-k") == 0)
-        		{
-            		// Print the read string and close 
-            		printf("%s received\n", buffer_req_temp); 
-            		memset(buffer_req_temp,0,SIZE);
+			
+        	FLAG_READ_TEMP = 0;
 
-            		sprintf(buffer_req_temp, "Kelvin %f\n",(temperature_celcius+273.15));
-            		write(fd1_pipe, buffer_req_temp, SIZE);
-
-        		}
-
-        		else if(strcmp(buffer_req_temp,"temp-c") == 0)
-        		{
-            		// Print the read string and close 
-            		printf("%s received\n", buffer_req_temp); 
-            		memset(buffer_req_temp,0,SIZE);
-
-            		sprintf(buffer_req_temp, "Celcius %f\n",(temperature_celcius));
-            		write(fd1_pipe, buffer_req_temp, SIZE);
-
-        		}
-
-        		else if(strcmp(buffer_req_temp,"temp-f") == 0)
-        		{
-            		// Print the read string and close 
-            		printf("%s received\n", buffer_req_temp); 
-            		memset(buffer_req_temp,0,SIZE);
-
-            		sprintf(buffer_req_temp, "Farenheit %f\n",((temperature_celcius * (9/5))+32));
-            		write(fd1_pipe, buffer_req_temp, SIZE);
-            		
-
-        		}
-        	}
-        	memset(buffer_req_temp,0,SIZE);
 
 
 		}
 	}
-	close(fd1);
-	close(fd1_pipe);
+	close(fd1_w);
 }
 
 /*****************************************************************
@@ -173,7 +120,6 @@ void *lux_task()
 	float lux = 0;
 
 	char buffer[MAX_BUFFER_SIZE];
-	char buffer_req_lux[SIZE];
 
 
 	sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
@@ -182,24 +128,19 @@ void *lux_task()
 	setup_timer_POSIX(&timer_id_lux,lux_timer_handler);
 	kick_timer(timer_id_lux, Delay_NS);
 
-	mkfifo(Lux, 0666);
 
-	int fd2 = open(Lux, O_WRONLY); 
-	fd2_pipe = open(myfifo_lux,O_RDWR|O_NONBLOCK);
+	int fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
-	reboot:
 	
 
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
-		goto reboot;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
-		goto reboot;
 	}
 
 	while(1)
@@ -207,22 +148,23 @@ void *lux_task()
 
 		if(FLAG_READ_LUX)
 		{
-			// usleep(400000);
 
 			
+			write(fd2_w, "L", 1);
+			memset(buffer,0,MAX_BUFFER_SIZE);
+			sprintf(buffer,"Pulse from lux thread\n");
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
 			pthread_mutex_lock(&lock);
 			if(read_channel_0()<0)
 			{
 				perror("Error on reading channel 0\n");
-				goto reboot;
 			}
 
 			if(read_channel_1()<0)
 			{
 				perror("Error on reading channel 0\n");
-				goto reboot;
 			}
 
 			//printf("CH0 %d\n",CH0);
@@ -237,36 +179,16 @@ void *lux_task()
 			sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-			write(fd2, "L", 1);
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Pulse from lux thread\n");
-			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			
 
 			FLAG_READ_LUX = 0;
 			pthread_mutex_unlock(&lock);
 
-			read(fd2_pipe, buffer_req_lux, SIZE);
-			if(strlen(buffer_req_lux) > 0)
-			{
-				printf("Request received in lux task\n");
-				if(strcmp(buffer_req_lux,"lux") == 0)
-        		{
-            		// Print the read string and close 
-            		printf("%s request received\n", buffer_req_lux); 
-            		memset(buffer_req_lux,0,SIZE);
-
-            		sprintf(buffer_req_lux, "Lux %f\n",lux);
-            		write(fd2_pipe, buffer_req_lux, SIZE);
-            		memset(buffer_req_lux,0,SIZE);
-
-        		}
-
-      		}        	
+			 	
 
 		}
 	}
-	close(fd2);
-	close(fd2_pipe);
+	close(fd2_w);
 }
 /*****************************************************************
 					Heart_beat checker
@@ -277,7 +199,7 @@ void beat_timer_handler(union sigval val)
 
 	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
 	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	//printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 
 	if(Pulse_temp <= Pulse_temp_prev)
 	{
@@ -289,10 +211,10 @@ void beat_timer_handler(union sigval val)
 
 	}
 
-	if(Pulse_log <= Pulse_log_prev)
-	{
-		printf("Log thread dead\n");
-	}
+	// if(Pulse_log <= Pulse_log_prev)
+	// {
+	// 	printf("Log thread dead\n");
+	// }
 
 	if(Pulse_lux <= Pulse_lux_prev)
 	{
@@ -360,13 +282,13 @@ int main(int argc, char *argv[])
 
 
 
-	mkfifo(Temp, 0666);
-	mkfifo(Lux, 0666);
-	mkfifo(log_t, 0666);
+	int fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
+	if(fd1 < 0)
+       	perror("error on opening Temp heartbeat\n");
 
-	int fd1 = open(Temp,O_RDONLY);
-	int fd2 = open(Lux,O_RDONLY); 
-	int fd3 = open(log_t,O_RDONLY); 
+	int fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+	if(fd2 < 0)
+       	perror("error on opening Lux heartbeat\n");
 
 	char pulse[1];
 
@@ -389,11 +311,11 @@ int main(int argc, char *argv[])
 			Pulse_lux++;
 		}
 
-		memset(pulse,0,1);
-		if(read(fd3,pulse,2) > 0)
-		{
-			Pulse_log++;
-		}
+		// memset(pulse,0,1);
+		// if(read(fd3,pulse,2) > 0)
+		// {
+		// 	Pulse_log++;
+		// }
 
 		/*
 		if(Pulse_temp > 20)
@@ -407,6 +329,10 @@ int main(int argc, char *argv[])
 	pthread_join(lux_thread,NULL);
 
 	pthread_join(logger_thread, NULL);
+
+	close(fd1);
+	close(fd2);
+	// close(fd3);
 
 	fclose(file_ptr);
 
