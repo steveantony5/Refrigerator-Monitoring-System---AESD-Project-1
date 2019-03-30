@@ -198,6 +198,34 @@ void *lux_task()
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"CH0 %d\nCH1 %d\nLux = %f\n",CH0,CH1,lux);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				fridge_state  = get_current_state_fridge(lux);
+				if(fridge_state == BRIGHT)
+				{
+					printf("Fridge Door is open\n");
+					memset(buffer,0,MAX_BUFFER_SIZE);
+					sprintf(buffer,"Fridge state - Door opened\n");
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == DARK)
+				{
+					printf("Fridge Door is close\n");
+					memset(buffer,0,MAX_BUFFER_SIZE);
+					sprintf(buffer,"Fridge state - Door Closed\n");
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == ERROR)
+				{
+					printf("Fridge in unknown state\n");
+					memset(buffer,0,MAX_BUFFER_SIZE);
+					sprintf(buffer,"Fridge state - unknown\n");
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+				}
+
+
+				
 			}
 
 			//printf("CH0 %d\n",CH0);

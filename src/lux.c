@@ -2,6 +2,8 @@
 
 int file_des_lux;
 uint8_t register_data;
+uint16_t register_data_word;
+
 uint16_t MSB_0;
 uint16_t LSB_0;
 
@@ -56,6 +58,60 @@ int lux_sensor_setup()
 	if (write(file_des_lux, &register_data, 1) == -1)
 	{
 		perror("Error on writing the timing register\n");
+		return ERROR;
+	}
+
+	// //command to write on control register as a word for low threshold register 
+	// register_data = WRITE_COMMAND_WORD | THRESHLOWLOW;
+
+	// if (write(file_des_lux, &register_data, 1) == -1)
+	// {
+	// 	perror("Error on writing the control register\n");
+	// 	return ERROR;
+	// }
+
+	// //value for the control registe16
+	// register_data_word = 0x;
+
+	// if (write(file_des_lux, &register_data_word, 2) == -1)
+	// {
+	// 	perror("Error on writing the low threshold register\n");
+	// 	return ERROR;
+	// }
+
+	//command to write on control register as a word for high threshold register 
+	register_data = WRITE_COMMAND_WORD | THRESHHIGHLOW;
+
+	if (write(file_des_lux, &register_data, 1) == -1)
+	{
+		perror("Error on writing the control register\n");
+		return ERROR;
+	}
+
+	//value for the control registe16
+	register_data_word = 0x03E8; //set to 1000
+
+	if (write(file_des_lux, &register_data_word, 2) == -1)
+	{
+		perror("Error on writing the high threshold register\n");
+		return ERROR;
+	}
+
+	//command to write on control register  for Interupt register 
+	register_data = WRITE_COMMAND | INTERRUPT;
+
+	if (write(file_des_lux, &register_data, 1) == -1)
+	{
+		perror("Error on writing the control register\n");
+		return ERROR;
+	}
+
+	//value for the INTERRUPT register
+	register_data = 0x12; 
+
+	if (write(file_des_lux, &register_data, 1) == -1)
+	{
+		perror("Error on writing the interrupt register\n");
 		return ERROR;
 	}
 
@@ -195,7 +251,7 @@ float lux_measurement(float CH0, float CH1)
 void has_state_transition_occurred(float lux)
 {
 	static float prev_lux = 0;
-	if((lux > 300) && (prev_lux <300))
+	if((lux > 200) && (prev_lux <200))
 	{
 		printf("State changed from Dark to Bright\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
@@ -203,12 +259,22 @@ void has_state_transition_occurred(float lux)
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	}
-	else if((lux < 300) && (prev_lux > 300))
+	else if((lux < 200) && (prev_lux > 200))
 	{
 		printf("State changed from Bright to Dark\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
 		sprintf(buffer,"State changed from Bright to Dark\n");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+		//clering the interrupt
+		//command to write on control register  for Interupt register 
+		register_data = 0xC0 ;
+
+		if (write(file_des_lux, &register_data, 1) == ERROR)
+		{
+			perror("Error on writing the control register\n");
+		}
+
 
 	}
 	prev_lux = lux;
@@ -230,4 +296,16 @@ float get_lux()
 		return lux_measurement(CH0,CH1);
 		
 	}
+}
+
+enum Status get_current_state_fridge(float value)
+{
+	
+	if(value > 200)
+		return BRIGHT;
+	if(value < 200)
+		return DARK;
+	else
+		return ERROR;
+
 }

@@ -172,6 +172,27 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
 
          	}
+            else if(strcmp(message,"door") == 0)
+            {
+                memset(buffer,'\0',MAX_BUFFER_SIZE);
+                printf("fridge state Request sent to remote request\n");
+                fridge_state = get_current_state_fridge(get_lux());
+                if(fridge_state == ERROR)
+                {
+                    sprintf(buffer,"Fridge in unknown state\n");
+                }
+                else if(fridge_state == BRIGHT)
+                {
+                    sprintf(buffer,"Fridge door is opened\n");
+                }
+                else if(fridge_state == DARK)
+                {
+                    sprintf(buffer,"Fridge door is Closed\n");
+                }
+
+                send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+
+            }
             else
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
