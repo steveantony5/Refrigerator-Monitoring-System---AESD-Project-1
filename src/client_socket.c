@@ -63,6 +63,7 @@ int main()
         printf("2. To know current temperature in Kelvin, Type \"temp-k\"\n");
         printf("3. To know current temperature in Farenheit, Type \"temp-f\"\n");
         printf("4. To know current brightness in lux, Type \"lux\"\n");
+        printf("5. To exit, Press Ctrl+c\n");
 
         scanf("%[^\n]%*c", buffer);
         send(client_socket, buffer, MAX_BUFFER_SIZE , 0);

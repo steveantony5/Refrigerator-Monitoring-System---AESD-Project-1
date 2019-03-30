@@ -65,6 +65,7 @@ int lux_sensor_setup()
 
 int read_channel_0()
 {
+
 	//command to read on DATA0LOW register
 	register_data = WRITE_COMMAND | DATA0LOW_REGISTER;
 
@@ -97,9 +98,10 @@ int read_channel_0()
 		return ERROR;
 	}
 
+
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
-
+	printf("CH0 %d\n",CH0);
 	return SUCCESS;
 
 
@@ -142,6 +144,7 @@ int read_channel_1()
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
+	printf("CH1 %d\n",CH1);
 	return SUCCESS;
 
  
@@ -215,6 +218,7 @@ void has_state_transition_occurred(float lux)
 
 float get_lux()
 {
+	usleep(500);
 	if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
 	{
 		return ERROR;

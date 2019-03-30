@@ -168,6 +168,7 @@ void *lux_task()
 
 			pthread_mutex_lock(&lock);
 
+			usleep(500);
 			if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
 			{
 				// led_on();
@@ -184,7 +185,7 @@ void *lux_task()
 				// led_off();
 				// printf("LED OFF LUX\n");
 				lux = lux_measurement(CH0,CH1);
-				//printf("lux %f\n",lux);
+				printf("lux %f\n",lux);
 
 				has_state_transition_occurred(lux);
 
@@ -213,9 +214,9 @@ void beat_timer_handler(union sigval val)
 {
 	char buffer[MAX_BUFFER_SIZE];
 
-	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
-	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	// printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
+	// printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
+	// printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 
 	if(Pulse_temp <= Pulse_temp_prev)
 	{

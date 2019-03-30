@@ -1,19 +1,9 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
+#include "led.h"
 
 int led_on()
 {
 	FILE *file_ptr = fopen("/sys/class/gpio/gpio49/value", "w");
-	// if(file_ptr == -1)
-	// {
-	// 	perror("LED file open failed");
-	// 	return -1;
-	// }
+	
 	fputc('0', file_ptr);
 	fclose(file_ptr);	
 
