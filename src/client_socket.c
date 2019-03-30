@@ -58,7 +58,7 @@ int main()
     char message[MAX_BUFFER_SIZE];
     while(1)
     {
-        printf("********************** Welcome ***************************\n")
+        printf("********************** Welcome ***************************\n");
         printf("1. To know current temperature in Celcius, Type \"temp-c\"\n");
         printf("2. To know current temperature in Kelvin, Type \"temp-k\"\n");
         printf("3. To know current temperature in Farenheit, Type \"temp-f\"\n");

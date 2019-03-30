@@ -215,7 +215,7 @@ void has_state_transition_occurred(float lux)
 
 float get_lux()
 {
-	if((read_channel_0() != ERROR) && (read_channel_1() != ERROR))
+	if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
 	{
 		return ERROR;
 	}
