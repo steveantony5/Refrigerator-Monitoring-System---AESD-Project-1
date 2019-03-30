@@ -70,13 +70,15 @@ void *temperature_task()
 
 	temp_sensor_init();
 
-	tlow_reg_write(10);
+	tlow_reg_write(25);
 
-	thigh_reg_write(100);
+	thigh_reg_write(27);
 
 	config_reg_write_default();
 
 	config_reg_read(&configuration);
+
+	// thigh_reg_write(100);
 
 	while(1)
 	{
@@ -109,15 +111,27 @@ void *temperature_task()
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
+
+				printf("Temperatue in celcius = %f\n", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
+				printf("T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
+				printf("T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				int alert = config_read_alert();
+				
+				if(alert == 1)
+					led_off();
+				else
+					led_on();
+				printf("Alert Pin state = %d\n",alert);
 			}
 
 			pthread_mutex_unlock(&lock);
@@ -224,8 +238,6 @@ void *lux_task()
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 				}
 
-
-				
 			}
 
 			//printf("CH0 %d\n",CH0);

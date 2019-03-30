@@ -38,6 +38,7 @@
 #define READ_CONVERSION (0xC0) 
 #define READ_FAULT_BITS (0x18)
 #define READ_EM_MODE (0x10)
+#define READ_ALERT	 (0x20)
 
 
 /**
@@ -405,5 +406,19 @@ config_read_conversion_rate
 *
 */
 int config_read_conversion_rate();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_alert
+--------------------------------------------------------------------------------------------
+*	This function will read the alert bit from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_alert();
 
 #endif

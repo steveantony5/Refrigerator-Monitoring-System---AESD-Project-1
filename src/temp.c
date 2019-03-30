@@ -69,7 +69,7 @@ int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
 
 	printf("bits = %x\n", readBytes[byte]);
 
-	return SUCCESS;
+	return readBytes[byte];
 }
 
 int temp_sensor_init()
@@ -213,6 +213,10 @@ int config_conversion_rate_8HZ()
 	return SUCCESS;
 }
 
+int config_read_alert()
+{
+	return config_reg_read_update(READ_ALERT, 1, 5); 
+}
 int tlow_reg_write(uint8_t temp_in_C)
 {
 	pointer_reg_write(tlowReg);
