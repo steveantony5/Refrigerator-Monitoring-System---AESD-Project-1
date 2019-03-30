@@ -132,24 +132,15 @@ void *lux_task()
 	int fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
 
 	
-	reboot:
-
-	if(FLAG_READ_LUX)
-	{
-		write(fd2_w, "L", 1);
-		FLAG_READ_LUX = 0;
-	}
 
 	if((i2c_setup(&file_des_lux,2,0x39)) != 0)
 	{
 		perror("Error on i2c bus set up for lux sensor");
-		goto reboot;
 	}
 
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
-		goto reboot;
 	}
 
 	while(1)
@@ -169,13 +160,11 @@ void *lux_task()
 			if(read_channel_0()<0)
 			{
 				perror("Error on reading channel 0\n");
-				goto reboot;
 			}
 
 			if(read_channel_1()<0)
 			{
 				perror("Error on reading channel 0\n");
-				goto reboot;
 			}
 
 			//printf("CH0 %d\n",CH0);
@@ -194,6 +183,9 @@ void *lux_task()
 
 			FLAG_READ_LUX = 0;
 			pthread_mutex_unlock(&lock);
+
+			printf("Lux thread cancelled\n");
+        	pthread_cancel(lux_thread);
 
 			 	
 
@@ -225,7 +217,7 @@ void beat_timer_handler(union sigval val)
 	if(Pulse_log <= Pulse_log_prev)
 	{
 		printf("Log thread dead\n");
-		
+
 		memset(buffer,0,MAX_BUFFER_SIZE);
 		sprintf(buffer,"Log thread dead\n");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -246,6 +238,27 @@ void beat_timer_handler(union sigval val)
 
 	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
 	
+}
+
+int startup_test()
+{
+	int ret_val;
+
+	ret_val = temp_sensor_init();
+	if(ret_val != 0)
+	{
+		perror("Satrup test temperature init failed");
+		return 1;
+	}
+
+	ret_val = temp_in_celcius();
+	if(ret_val <-40 && ret_val > 128)
+	{
+		perror("Satrup temperature value test failed");
+		return 1;
+	}
+
+	return 0;
 }
 
 /***********************************************
