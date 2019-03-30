@@ -7,6 +7,7 @@
 
 const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
 
+
 pthread_mutex_t lock;
 
 char *time_stamp()
@@ -62,9 +63,16 @@ void *logger_thread_callback(void *arg)
     sprintf(file_name,"%s%s/%s",LOG_PATH,fd->file_path,fd->file_name);
    	printf("File name = %s\n",file_name);
     
+    int fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
    	
    	while(1)
    	{
+        //write(fd3_w, "G", 1);
+
+        // memset(buffer,0,MAX_BUFFER_SIZE);
+        // sprintf(buffer,"Pulse from Log thread\n");
+        // mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
 	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0))
 	    {
 			pthread_mutex_lock(&lock);
@@ -75,5 +83,6 @@ void *logger_thread_callback(void *arg)
 
     mq_close(msg_queue);
     mq_unlink(QUEUE_NAME);
+    close(fd3_w);
 }
 

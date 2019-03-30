@@ -68,6 +68,7 @@ void *temperature_task()
 
 	config_reg_read(&configuration);
 
+
 	while(1)
 	{
 		if(FLAG_READ_TEMP)
@@ -198,7 +199,7 @@ void beat_timer_handler(union sigval val)
 
 	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
 	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	//printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 
 	if(Pulse_temp <= Pulse_temp_prev)
 	{
@@ -210,10 +211,14 @@ void beat_timer_handler(union sigval val)
 
 	}
 
-	// if(Pulse_log <= Pulse_log_prev)
-	// {
-	// 	printf("Log thread dead\n");
-	// }
+	if(Pulse_log <= Pulse_log_prev)
+	{
+		printf("Log thread dead\n");
+		
+		memset(buffer,0,MAX_BUFFER_SIZE);
+		sprintf(buffer,"Log thread dead\n");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
 
 	if(Pulse_lux <= Pulse_lux_prev)
 	{
@@ -283,11 +288,15 @@ int main(int argc, char *argv[])
 
 	int fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
 	if(fd1 < 0)
-       	perror("error on opening Temp heartbeat\n");
+       	perror("error on opening fd1 Temp heartbeat\n");
 
 	int fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
 	if(fd2 < 0)
-       	perror("error on opening Lux heartbeat\n");
+       	perror("error on opening fd2 Lux heartbeat\n");
+
+    int fd3 = open(log_t,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+	if(fd3 < 0)
+       	perror("error on opening fd3 Lux heartbeat\n");
 
 	char pulse[1];
 
@@ -310,11 +319,11 @@ int main(int argc, char *argv[])
 			Pulse_lux++;
 		}
 
-		// memset(pulse,0,1);
-		// if(read(fd3,pulse,2) > 0)
-		// {
-		// 	Pulse_log++;
-		// }
+		memset(pulse,0,1);
+		if(read(fd3,pulse,2) > 0)
+		{
+			Pulse_log++;
+		}
 
 		/*
 		if(Pulse_temp > 20)
@@ -331,7 +340,7 @@ int main(int argc, char *argv[])
 
 	close(fd1);
 	close(fd2);
-	// close(fd3);
+	close(fd3);
 
 	fclose(file_ptr);
 

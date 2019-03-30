@@ -49,4 +49,7 @@ void *logger_thread_callback(void *);
 float get_temperature();
 
 float get_lux();
+
+ extern char * log_t;
+
 #endif
