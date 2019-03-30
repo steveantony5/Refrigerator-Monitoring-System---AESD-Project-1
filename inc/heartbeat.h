@@ -11,6 +11,7 @@
 #include "lux.h"
 #include "temp.h"
 #include "i2c.h"
+#include "led.h"
 
 #include<sys/types.h>
 #include<sys/socket.h>

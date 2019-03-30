@@ -84,6 +84,8 @@ void *temperature_task()
 
 			if(temp_read() == ERROR)
 			{
+				led_on();
+				printf("LED ON TEMP\n");
 				printf("Temperatue sensor error, trying to reconnect\n");
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue sensor error,  trying to reconnect");
@@ -92,6 +94,8 @@ void *temperature_task()
 
 			else
 			{
+				led_off();
+				printf("LED OFF TEMP\n");
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
@@ -165,6 +169,8 @@ void *lux_task()
 
 			if(read_channel_0() == ERROR || read_channel_1() == ERROR)
 			{
+				led_on();
+				printf("LED OFF LUX\n");
 				perror("Error on reading channels\n");
 				printf("LUx sensor error, trying to reconnect\n");
 				memset(buffer,0,MAX_BUFFER_SIZE);
@@ -174,7 +180,8 @@ void *lux_task()
 
 			else
 			{
-
+				led_off();
+				printf("LED OFF LUX\n");
 				lux = lux_measurement(CH0,CH1);
 				//printf("lux %f\n",lux);
 
@@ -303,6 +310,8 @@ int main(int argc, char *argv[])
 	sprintf(file_name,"%s%s/%s",LOG_PATH, fd.file_path, fd.file_name);
 
 	logger_init(file_name);
+	gpio_pin_init();
+	led_off();
 
 	if (pthread_mutex_init(&lock, NULL) != 0) 
     { 

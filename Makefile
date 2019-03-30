@@ -23,7 +23,7 @@ client: $(CLIENT_OBJ)
 	$(CC) $(CLIENT_OBJ) $(INCLUDES)  $(CLIENT_FLAGS) -o $(CLIENT_OP)
 
 bbg:
-	arm-linux-gcc -o main src/i2c.c src/heartbeat.c src/logger.c src/POSIX_timer.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
+	arm-linux-gcc -o main src/i2c.c src/heartbeat.c src/logger.c src/POSIX_timer.c src/lux.c src/temp.c src/led.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 bbg_remote_api:
 	arm-linux-gcc -o remote_api src/client_socket.c -Wall -Werror
