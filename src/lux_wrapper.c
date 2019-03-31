@@ -50,7 +50,7 @@ int lux_sensor_setup()
 	}
 
 	/*command to write on control register*/
-	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , NULL, CLEAR_PENDING_INTERUPTS );
+	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
 	if(ret_status == ERROR)
 	{
 		perror("Error on CONTROL_REGISTER of lux sensor");
@@ -59,9 +59,7 @@ int lux_sensor_setup()
 
 	/*Writing to control register*/
 	register_data = 0x03;
-
 	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
-
 	if(ret_status == ERROR)
 	{
 		perror("Error on CONTROL_REGISTER of  lux sensor");
@@ -69,7 +67,7 @@ int lux_sensor_setup()
 	}
 
 	/*command to write on TIMING_REGISTER*/
-	ret_status = byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on TIMING_REGISTER of  lux sensor");
@@ -86,7 +84,7 @@ int lux_sensor_setup()
 	}
 	
 	/*command to write as a word for high threshold register */
-	ret_status = word_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , NULL, NONE );
+	ret_status = word_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data_word, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on THRESHHIGHLOW of lux sensor");
@@ -103,7 +101,7 @@ int lux_sensor_setup()
 	}
 
 	/*command to write for INTERRUPT register */
-	ret_status = byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , NULL, CLEAR_PENDING_INTERUPTS );
+	ret_status = byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
 	if(ret_status == ERROR)
 	{
 		perror("Error on INTERRUPT_REGISTER of lux sensor");
@@ -130,7 +128,7 @@ int indication_register()
 	
 	int ret_status;
 
-	ret_status = byte_access_lux_register(file_des_lux, INDICATION_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, INDICATION_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on INTERRUPT_REGISTER of lux sensor");
@@ -138,7 +136,8 @@ int indication_register()
 	}
 	
 	/*Writing to INTERRUPT register*/
-	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	register_data = 0x12; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on INTERRUPT_REGISTER of lux sensor");
@@ -170,9 +169,8 @@ int read_channel_0()
 {
 
 	int ret_status;
-	uint8_t data;
 
-	ret_status = byte_access_lux_register(file_des_lux, DATA0LOW_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, DATA0LOW_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA0LOW_REGISTER of lux sensor");
@@ -180,16 +178,16 @@ int read_channel_0()
 	}
 	
 	/*reading CH0 value lower byte*/
-	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA0LOW_REGISTER of lux sensor");
 		return ERROR;
 	}
 	LSB_0 = 0;
-	LSB_0 = data;
+	LSB_0 = register_data;
 
-	ret_status = byte_access_lux_register(file_des_lux, DATA0HIGH_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, DATA0HIGH_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA0HIGH_REGISTER of lux sensor");
@@ -197,7 +195,7 @@ int read_channel_0()
 	}
 	
 	/*reading CH0 value lower byte*/
-	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA0HIGH_REGISTER of lux sensor");
@@ -205,7 +203,7 @@ int read_channel_0()
 	}
 
 	MSB_0 = 0;
-	MSB_0 = data;
+	MSB_0 = register_data;
 
 	/*forming the full 16 bit from MSB and LSB*/
 	CH0 = (MSB_0 << 8);
@@ -223,9 +221,8 @@ int read_channel_0()
 int read_channel_1()
 {
 	int ret_status;
-	uint8_t data;
 
-	ret_status = byte_access_lux_register(file_des_lux, DATA1LOW_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, DATA1LOW_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA1LOW_REGISTER of lux sensor");
@@ -233,16 +230,16 @@ int read_channel_1()
 	}
 	
 	/*reading CH0 value lower byte*/
-	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA1LOW_REGISTER of lux sensor");
 		return ERROR;
 	}
 	LSB_1 = 0;
-	LSB_1 = data;
+	LSB_1 = register_data;
 
-	ret_status = byte_access_lux_register(file_des_lux, DATA1HIGH_REGISTER,COMMAND , NULL, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, DATA1HIGH_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA1HIGH_REGISTER of lux sensor");
@@ -250,14 +247,14 @@ int read_channel_1()
 	}
 	
 	/*reading CH0 value lower byte*/
-	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on DATA1HIGH_REGISTER of lux sensor");
 		return ERROR;
 	}
 	MSB_1 = 0;
-	MSB_1 = data;
+	MSB_1 = register_data;
 
 	/*forming the full 16 bit from MSB and LSB*/
 	CH1 = (MSB_1 << 8);
