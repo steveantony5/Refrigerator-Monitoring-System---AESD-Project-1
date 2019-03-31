@@ -37,6 +37,10 @@ int lux_dead_flag = 0;
 int remote_socket_dead_flag = 0;
 int logger_dead_flag = 0;
 
+volatile int start_temp_thread = 0;
+volatile int start_lux_thread = 0;
+int start_logger_thread = 0;
+
 /*******************************
 	Globals Temp thread
 ********************************/
@@ -57,6 +61,8 @@ int fd1, fd2, fd3; /*for dumping the heart beat to a pipe*/
 *****************************************************************/
 void *temperature_task()
 {
+	while(!start_temp_thread);
+
 	char buffer[MAX_BUFFER_SIZE];
 
 	uint16_t configuration;
@@ -144,7 +150,9 @@ void *temperature_task()
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 	
-	
+	#ifdef DEBUG
+	printf("FAULT BITS AFTER CONFIG = %x\n",config_read_fault_bits());
+	#endif
 
 	while(1)
 	{
@@ -220,6 +228,9 @@ void *temperature_task()
 *****************************************************************/
 void *lux_task()
 {
+
+	while(!start_lux_thread);
+
 	/*for stroing the lux value*/
 	float lux = 0;
 
@@ -444,6 +455,12 @@ int startup_test()
 		perror("Sartup temperature value test failed");
 		temp_dead_flag = 1;
 	}
+	
+	if(lux_sensor_setup() == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
 
 	/*Checks the light sensor power on check*/
 	if(indication_register() == ERROR)
@@ -451,52 +468,64 @@ int startup_test()
 		perror("Sartup lux value test failed");
 		lux_dead_flag = 1;
 	}
-
+	
 	ret_val = (int)get_lux();
 	if(ret_val == ERROR)
 	{
 		perror("Sartup lux value test failed");
 		lux_dead_flag = 1;
 	}
-
-
+	
 	/*Checks if the threads are spawned properly*/
 	if(!remote_socket_thread_creation)
 	{
 		perror("Sartup remote request thread creation test failed");
 		remote_socket_dead_flag = 1;
 	}
-
+	
 	if(!temperature_thread_creation)
 	{
 		perror("Sartup temperature thread creation test failed");
 		temp_dead_flag = 1;
 	}
+	
 
 	if(!lux_thread_creation)
 	{
 		perror("Sartup lux thread creation test failed");
 		lux_dead_flag = 1;
 	}
-
+	
 	if(!logger_thread_creation)
 	{
 		perror("Sartup logger thread creation test failed");
 		logger_dead_flag = 1;
 	}
+	
+	if(!lux_dead_flag)
+	{
+		start_lux_thread = 1;
+	}	
+	
 
+	if(!temp_dead_flag)
+	{
+		start_temp_thread = 1;
+	}
+	
 	/*returns error code for any failure in POST*/
 	if(temp_dead_flag || lux_dead_flag || remote_socket_dead_flag || logger_dead_flag)
 	{
-		memset(buffer,'\0',MAX_BUFFER_SIZE);
-		sprintf(buffer,"ERROR Start up test failed");
-		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		// memset(buffer,'\0',MAX_BUFFER_SIZE);
+		// sprintf(buffer,"ERROR Start up test failed");
+		// mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 		return ERROR;
 	}
 	
-	memset(buffer,'\0',MAX_BUFFER_SIZE);
-	sprintf(buffer,"INFO Start up test Passed");
-	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	// memset(buffer,'\0',MAX_BUFFER_SIZE);
+	// sprintf(buffer,"INFO Start up test Passed");
+	// mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
 	return SUCCESS;
 }
 
@@ -648,22 +677,37 @@ int main(int argc, char *argv[])
 		sprintf(buffer,"ERROR opening fd3 FIFO log heartbeat failed");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
-       	
 
-    sleep(1);
 
     /*initiating start up tests*/
     int ret_val = startup_test();
 	if(!ret_val)
+	{
+		#ifdef DEBUG
 		printf("Startup test passed!\n");
+		#endif
 
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"INFO Start up test Passed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
 	/*Killing the thread which failed on Power On Self Test*/
 	else
 	{
 		if(temp_dead_flag)
+		{
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			sprintf(buffer,"ERROR Temperature start up test failed");
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			kill(pid, SIGUSR1);
+		}
 		if(lux_dead_flag)
+		{
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			sprintf(buffer,"ERROR Lux start up test failed");
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			kill(pid, SIGUSR2);
+		}
 		if(logger_dead_flag)
 			kill(pid, SIGALRM);
 	}

@@ -8,6 +8,8 @@
 timer_t timer_id_log;
 int FLAG_LOG;
 
+// extern volatile int start_logger_thread;
+
 const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
 typedef enum log_level_enum{
@@ -64,7 +66,10 @@ void logger_init(char *file_path)
 
 void *logger_thread_callback(void *arg)
 {
-	char buffer[MAX_BUFFER_SIZE];
+	
+    // while(!start_logger_thread);
+
+    char buffer[MAX_BUFFER_SIZE];
     char file_name[MAX_BUFFER_SIZE];
     char logger_level[10];
 

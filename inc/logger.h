@@ -28,8 +28,6 @@
 #define MAX_BUFFER_SIZE	100
 
 
-
-
 typedef struct
 {
 	char *file_name;
