@@ -14,7 +14,7 @@
 
 #include "POSIX_timer.h"
 #include "logger.h"
-#include "lux.h"
+#include "lux_wrapper.h"
 #include "temp.h"
 #include "i2c.h"
 #include "led.h"

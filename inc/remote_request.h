@@ -25,7 +25,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#include "lux.h"
+#include "lux_wrapper.h"
 #include "temp.h"
 #include "logger.h"
 #include "common.h"
