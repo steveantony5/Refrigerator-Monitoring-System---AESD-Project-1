@@ -8,7 +8,16 @@
 timer_t timer_id_log;
 int FLAG_LOG;
 
-const char *log_level[10] = {"INFO", "ERROR", "DEBUG"};
+const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
+
+const int user_select_log_level = 3;
+
+typedef enum log_level_enum{
+    Debug,
+    Info,
+    Warn,
+    Error
+}log_level_enum;
 
 int fd3_w;
 
@@ -52,6 +61,9 @@ void *logger_thread_callback(void *arg)
 {
 	char buffer[MAX_BUFFER_SIZE];
     char file_name[MAX_BUFFER_SIZE];
+    char logger_level[10];
+
+    int received_log_level;
     
     file_descriptors *fd = (file_descriptors *)arg;
 
@@ -69,14 +81,28 @@ void *logger_thread_callback(void *arg)
         {
             write(fd3_w, "G", 1);
             FLAG_LOG = 0;
-
         }
 
 	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0) > 0)
 	    {
 			pthread_mutex_lock(&lock);
-			LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(), buffer);
-			pthread_mutex_unlock(&lock);
+
+            sscanf(buffer,"%s", logger_level);
+            
+            if(strcmp(logger_level, "ERROR") == 0)
+                received_log_level = Error;
+            else if(strcmp(logger_level, "WARN") == 0)
+                received_log_level = Warn;
+            else if(strcmp(logger_level, "DEBUG") == 0)
+                received_log_level = Debug;
+            else
+                received_log_level = Info;
+
+            if(received_log_level >= user_select_log_level)
+                LOG_MESSAGE(file_name,"%s %s %s\n", logger_level, time_stamp(), buffer);
+			
+            memset(buffer,0,MAX_BUFFER_SIZE);
+            pthread_mutex_unlock(&lock);
 	    }
 	}
 
