@@ -1,9 +1,19 @@
+/**
+ * @\file	POSIX_timer.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the function definitions for POSIX timer 
+ * @\date	03/30/2019
+ *
+ */
+
 /*****************************************************************
 						Includes
 *****************************************************************/
 #include "POSIX_timer.h"
 
-
+/*****************************************************************
+						Global declaration
+*****************************************************************/
 // FIFO file path 
  char * Temp = "/tmp/tmp_to_main";
  char * Lux = "/tmp/lux_to_main";
@@ -58,12 +68,13 @@ int setup_timer_POSIX(timer_t *timer_id,void (*handler)(union sigval))
 	if(timer_create(CLOCK_REALTIME, &sev, timer_id) != 0) //on success, timer id is placed in timer_id
 	{
 		printf("Error on creating timer\n");
+		return ERROR;
 	}  
 
 
 
 
-    return 0;
+    return SUCCESS;
 }
 
 /*****************************************************************
@@ -80,13 +91,12 @@ int kick_timer(timer_t timer_id, int interval_ns)
     in.it_interval.tv_nsec = interval_ns; //sets interval
     
     //issue the periodic timer request here.
-    int status = timer_settime(timer_id, 0, &in, NULL) ;
-    if( status != 0)
+    if( (timer_settime(timer_id, 0, &in, NULL)) != SUCCESS)
     {
     	printf("Error on settime function\n");
-    	return status;
+    	return ERROR;
     }
-    return 0;
+    return SUCCESS;
 }
 
 /*****************************************************************
@@ -94,7 +104,12 @@ int kick_timer(timer_t timer_id, int interval_ns)
 *****************************************************************/
 int stop_timer(timer_t timer_id)
 {
-	timer_delete(timer_id);
+	if( (timer_delete(timer_id)) != SUCCESS)
+    {
+    	printf("Error on delete timer function\n");
+    	return ERROR;
+    }
+	
 
-    return 0;
+    return SUCCESS;
 }

@@ -29,5 +29,5 @@ bbg_remote_api:
 	arm-linux-gcc -o remote_api src/client_socket.c -Wall -Werror
 
 clean:
-	rm -f *.o main
+	rm -f *.o main remote_api client_socket
 	rm -rf $(LOG_FOLDER)

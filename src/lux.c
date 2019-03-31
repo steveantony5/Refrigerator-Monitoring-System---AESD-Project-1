@@ -1,32 +1,49 @@
+/*****************************************************************
+						Includes
+*****************************************************************/
 #include "lux.h"
 
+/*****************************************************************
+						Global definitions
+*****************************************************************/
+/*lux descriptor in i2c*/
 int file_des_lux;
+
+/*for writing and reading as byte from the registers*/
 uint8_t register_data;
+
+/*for writing and reading as word from the registers*/
 uint16_t register_data_word;
 
+/*for storing MSB and LSB of CH0 of lux*/
 uint16_t MSB_0;
 uint16_t LSB_0;
 
+/*for storing MSB and LSB of CH1 of lux*/
 uint16_t MSB_1;
 uint16_t LSB_1;
 
+/*16 bit value of CH0 and CH1*/
 uint16_t CH0;
 uint16_t CH1;
 
 
-
-
+/*****************************************************************
+					setting up lux sensor
+*****************************************************************/
 int lux_sensor_setup()
 {
 
 	pthread_mutex_lock(&lock_res);
+
+	/*i2c setup*/
 	if((i2c_setup(&file_des_lux,2,0x39)) == ERROR)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		return ERROR;
 	}
 
-	//command to write on control register
+	/*command to write on control register*/
 	register_data = WRITE_COMMAND | CONTROL_REGISTER |CLEAR_PENDING_INTERUPTS;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -35,7 +52,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//value for the control register
+	/*Writing to control register*/
 	register_data = 0x03;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -44,7 +61,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//command to write on timing register
+	/*command to write on TIMING_REGISTER*/
 	register_data = WRITE_COMMAND | TIMING_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -53,7 +70,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//value for the control registe16
+	/*Writing to timing register*/
 	register_data = 0x12;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -62,25 +79,8 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	// //command to write on control register as a word for low threshold register 
-	// register_data = WRITE_COMMAND_WORD | THRESHLOWLOW;
-
-	// if (write(file_des_lux, &register_data, 1) == -1)
-	// {
-	// 	perror("Error on writing the control register\n");
-	// 	return ERROR;
-	// }
-
-	// //value for the control registe16
-	// register_data_word = 0x;
-
-	// if (write(file_des_lux, &register_data_word, 2) == -1)
-	// {
-	// 	perror("Error on writing the low threshold register\n");
-	// 	return ERROR;
-	// }
-
-	//command to write on control register as a word for high threshold register 
+	
+	/*command to write as a word for high threshold register */
 	register_data = WRITE_COMMAND_WORD | THRESHHIGHLOW;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -89,7 +89,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//value for the control registe16
+	/*Writing to threshold register*/
 	register_data_word = 0x0BB8; //set to 3000
 
 	if (write(file_des_lux, &register_data_word, 2) == ERROR)
@@ -98,7 +98,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//command to write on control register  for Interupt register 
+	/*command to write for INTERRUPT register */
 	register_data = WRITE_COMMAND | INTERRUPT | CLEAR_PENDING_INTERUPTS;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -107,7 +107,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
-	//value for the INTERRUPT register
+	/*Writing to INTERRUPT register*/
 	register_data = 0x12; 
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -122,11 +122,14 @@ int lux_sensor_setup()
 
 }
 
-
+/*****************************************************************
+			Indication register for start up
+*****************************************************************/
 int indication_register()
 {
 	pthread_mutex_lock(&lock_res);
-	//command to write on control register  for Interupt register 
+	
+	/*command to write on INDICATION_REGISTER*/
 	register_data = WRITE_COMMAND | INDICATION_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == ERROR)
@@ -135,6 +138,7 @@ int indication_register()
 		return ERROR;
 	}
 
+	/*Reading from INDICATION_REGISTER*/
 	if (read(file_des_lux, &register_data, 1) == ERROR)
 	{
 		perror("Error on writing the interrupt register\n");
@@ -143,6 +147,8 @@ int indication_register()
 
 	pthread_mutex_unlock(&lock_res);
 
+
+	/*logging part numer and revision number of lux sensor*/
 	uint8_t part_no = register_data & (0xF0);
 	part_no = part_no >> 4;
 	printf("Part numer of Lux sensor %d\n",part_no);
@@ -159,11 +165,15 @@ int indication_register()
 	return SUCCESS;
 }
 
+/*****************************************************************
+			         Reading CH0
+*****************************************************************/
 int read_channel_0()
 {
 
 	pthread_mutex_lock(&lock_res);
-	//command to read on DATA0LOW register
+
+	/*command to read on DATA0LOW register*/
 	register_data = WRITE_COMMAND | DATA0LOW_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
@@ -172,14 +182,14 @@ int read_channel_0()
 		return ERROR;
 	}
 
-
+	/*reading CH0 value lower byte*/
 	if (read(file_des_lux, &LSB_0, 1) == -1)
 	{
 		perror("Error on reading the DATA0LOW_REGISTER register\n");
 		return ERROR;
 	}
 
-	//command to read on DATA0HIGH register
+	/*command to read on DATA0HIGH register*/
 	register_data = WRITE_COMMAND | DATA0HIGH_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
@@ -188,28 +198,32 @@ int read_channel_0()
 		return ERROR;
 	}
 
-
+	/*reading CH0 value upper byte*/
 	if (read(file_des_lux, &MSB_0, 1) == -1)
 	{
 		perror("Error on reading the DATA0HIGH_REGISTER register\n");
 		return ERROR;
 	}
 
-
+	/*forming the full 16 bit from MSB and LSB*/
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
 
 	pthread_mutex_unlock(&lock_res);
-	// printf("CH0 %d\n",CH0);
+
 	return SUCCESS;
 
 
 }
 
+/*****************************************************************
+			         Reading CH1
+*****************************************************************/
 int read_channel_1()
 {
 	pthread_mutex_lock(&lock_res);
-	//command to read on DATA0LOW register
+
+	/*command to read on DATA1LOW register*/
 	register_data = WRITE_COMMAND | DATA1LOW_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
@@ -218,14 +232,14 @@ int read_channel_1()
 		return ERROR;
 	}
 
-
+	/*reading CH1 value lower byte*/
 	if (read(file_des_lux, &LSB_1, 1) == -1)
 	{
 		perror("Error on reading the DATA1LOW_REGISTER register\n");
 		return ERROR;
 	}
 
-	//command to read on DATA0HIGH register
+	/*command to read on DATA1HIGH register*/
 	register_data = WRITE_COMMAND | DATA1HIGH_REGISTER;
 
 	if (write(file_des_lux, &register_data, 1) == -1)
@@ -234,13 +248,14 @@ int read_channel_1()
 		return ERROR;
 	}
 
-
+	/*reading CH1 value upper byte*/
 	if (read(file_des_lux, &MSB_1, 1) == -1)
 	{
 		perror("Error on reading the DATA1HIGH_REGISTER register\n");
 		return ERROR;
 	}
 
+	/*forming the full 16 bit from MSB and LSB*/
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
@@ -251,12 +266,15 @@ int read_channel_1()
  
 }
   
-
+/*****************************************************************
+			         Getting lux value
+*****************************************************************/
 float lux_measurement(float CH0, float CH1)
 {
 
 	float ratio = (CH1 / CH0);
 
+	
 
 	//0 < CH1/CH0 ≤ 0.50 Sensor Lux = (0.0304 x CH0) – (0.062 x CH0 x ((CH1/CH0)1.4))
 
@@ -289,10 +307,13 @@ float lux_measurement(float CH0, float CH1)
 
 }
 
+/*****************************************************************
+			         Checks for state transition
+*****************************************************************/
 void has_state_transition_occurred(float lux)
 {
 	static float prev_lux = 0;
-	if((lux > 70) && (prev_lux <70))
+	if((lux > THRESHOLD_FOR_STATE_CHANGE) && (prev_lux <THRESHOLD_FOR_STATE_CHANGE))
 	{
 		printf("State changed from Dark to Bright\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
@@ -300,29 +321,34 @@ void has_state_transition_occurred(float lux)
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	}
-	else if((lux < 70) && (prev_lux > 70))
+	else if((lux < THRESHOLD_FOR_STATE_CHANGE) && (prev_lux > THRESHOLD_FOR_STATE_CHANGE))
 	{
 		printf("State changed from Bright to Dark\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
 		sprintf(buffer,"State changed from Bright to Dark\n");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-		//clering the interrupt
-		//command to write on control register  for Interupt register 
-		register_data = CLEAR_PENDING_INTERUPTS | WRITE_COMMAND ;
+		// //clearing the interrupt
+		// //command to write on control register  for Interupt register 
+		// register_data = CLEAR_PENDING_INTERUPTS | WRITE_COMMAND ;
 
-		if (write(file_des_lux, &register_data, 1) == ERROR)
-		{
-			perror("Error on writing the control register\n");
-		}
+		// if (write(file_des_lux, &register_data, 1) == ERROR)
+		// {
+		// 	perror("Error on writing the control register\n");
+		// }
 
 
 	}
+
 	prev_lux = lux;
 
 
 }
 
+
+/*****************************************************************
+			         Wrapper for lux measurement
+*****************************************************************/
 float get_lux()
 {
 	usleep(500);
@@ -339,12 +365,16 @@ float get_lux()
 	}
 }
 
+
+/*****************************************************************
+			        Get the state for fridge door
+*****************************************************************/
 enum Status get_current_state_fridge(float value)
 {
 	
-	if(value > 70)
+	if(value > THRESHOLD_FOR_STATE_CHANGE)
 		return BRIGHT;
-	if(value <= 70)
+	if(value <= THRESHOLD_FOR_STATE_CHANGE)
 		return DARK;
 	else
 		return ERROR;

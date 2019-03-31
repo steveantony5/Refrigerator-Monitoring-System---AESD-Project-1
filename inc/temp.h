@@ -1,3 +1,6 @@
+
+#ifndef TEMP_H_
+#define TEMP_H_
 /**
  * @\file	temp.h
  * @\author	Sanju Prakash Kannioth
@@ -5,14 +8,9 @@
  * @\date	03/29/2019
  *
  */
-
-#ifndef TEMP_H_
-#define TEMP_H_
-
-/**
- * INCLUDES
- *
- */
+/*****************************************
+ *             INCLUDES
+ ***************************************/
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -20,13 +18,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "logger.h"
+#include "common.h"
 
 #include "i2c.h"
 
-/**
- * MACROS
- *
- */
+/*****************************************
+ *             Macros
+ ***************************************/
 #define TEMP_ADDR 0x48 // Slave address of temperature sensor
 
 #define SD_MODE (1 << 8) // Bit mask for shutdown configuration
@@ -41,10 +39,9 @@
 #define READ_ALERT	 (0x20)
 
 
-/**
- * ENUMS
- *
- */
+/*****************************************
+ *             enums
+ ***************************************/
 typedef enum pointer_reg{
 	tempReg,
 	configReg,

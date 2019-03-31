@@ -1,6 +1,16 @@
+/**
+ * @\file   remote_request.c
+ * @\author Sanju Prakash Kannioth
+ * @\brief  This files contains the definitions of Socket IPC and remote request server theread
+ * @\date   03/30/2019
+ *
+ */
+
+/*****************************************************************
+                        Includes
+*****************************************************************/
 #include "remote_request.h"
 
-extern const char *log_level[10];
 
 /**********************************************
        Function for server socket creation
@@ -100,10 +110,11 @@ void *remote_request_callback(void *arg)
     while(1)
     {
          
-    	 //receiving from the other process
+    	 
          if(recv(new_socket, message ,MAX_BUFFER_SIZE, 0))
          {
 
+            /*receives temperature request in celcius from remote request client*/
          	if(strcmp(message,"tempc") == 0)
          	{
 
@@ -122,6 +133,7 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
          	}
 
+            /*receives temperature request in Kelvin from remote request client*/
             else if(strcmp(message,"tempk") == 0)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
@@ -139,6 +151,7 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
 
+            /*receives temperature request in Farenheit from remote request client*/
             else if(strcmp(message,"tempf") == 0)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
@@ -156,6 +169,7 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
 
+            /*receives brightness request in lux from remote request client*/
          	else if(strcmp(message,"lux") == 0)
          	{
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
@@ -173,6 +187,8 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
 
          	}
+
+            /*receives fridge door status from remote request client*/
             else if(strcmp(message,"door") == 0)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
@@ -194,6 +210,8 @@ void *remote_request_callback(void *arg)
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
 
             }
+
+            /*Invalid remote request client*/
             else
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
