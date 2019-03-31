@@ -67,7 +67,6 @@ int setup_timer_POSIX(timer_t *timer_id,void (*handler)(union sigval))
 
 	if(timer_create(CLOCK_REALTIME, &sev, timer_id) != 0) //on success, timer id is placed in timer_id
 	{
-		printf("Error on creating timer\n");
 		return ERROR;
 	}  
 
@@ -93,7 +92,6 @@ int kick_timer(timer_t timer_id, int interval_ns)
     //issue the periodic timer request here.
     if( (timer_settime(timer_id, 0, &in, NULL)) != SUCCESS)
     {
-    	printf("Error on settime function\n");
     	return ERROR;
     }
     return SUCCESS;

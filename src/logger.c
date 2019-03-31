@@ -24,9 +24,12 @@ int fd3_w;
 
 pthread_mutex_t lock;
 
+char time_stam[30];
+
 char *time_stamp()
 {
-	char *time_stam = malloc(sizeof(char)*30);
+	
+    memset(time_stam,'\0',30);
 	time_t timer;
 	timer = time(NULL);
 	strftime(time_stam, 26, "%Y-%m-%d %H:%M:%S", localtime(&timer));
@@ -44,7 +47,6 @@ void logger_init(char *file_path)
     if (pthread_mutex_init(&lock, NULL) != 0) 
     { 
         perror("Mutex init failed\n"); 
-        return; 
     }
 
 
@@ -71,16 +73,36 @@ void *logger_thread_callback(void *arg)
     sprintf(file_name,"%s%s/%s",LOG_PATH,fd->file_path,fd->file_name);
    	printf("File name = %s\n",file_name);
 
-    setup_timer_POSIX(&timer_id_log,log_timer_handler);
-    kick_timer(timer_id_log, Delay_NS);
+    if((setup_timer_POSIX(&timer_id_log,log_timer_handler)) == ERROR)
+    {
+        perror("Error on creating timer for logger\n");
+        pthread_cancel(logger_thread); 
+    }
+
+    if((kick_timer(timer_id_log, Delay_NS)) == ERROR)
+    {
+        perror("Error on kicking timer for logger\n");
+        pthread_cancel(logger_thread); 
+    }
+
     
     fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
-   	
+   	if(fd3_w == ERROR)
+    {
+        perror("Error on creating FIFO fd3_w for loger\n");
+        pthread_cancel(logger_thread); 
+    }
+
    	while(1)
    	{
+
         if(FLAG_LOG)
         {
-            write(fd3_w, "G", 1);
+            if((write(fd3_w, "G", 1)) == ERROR)
+            {
+                perror("Error on write of logger heartbeat\n");
+            }
+
             FLAG_LOG = 0;
         }
 

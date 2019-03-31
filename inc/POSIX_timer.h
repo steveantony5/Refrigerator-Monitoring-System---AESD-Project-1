@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include "common.h"
 /*****************************************************************

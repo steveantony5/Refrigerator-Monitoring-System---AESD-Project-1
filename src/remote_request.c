@@ -25,8 +25,8 @@ int socket_creation_server(int port)
         if(server_socket < 0 ) // enters this loop if port number is not given as command line argument
         {
                 //printing error message when opening client socket
-                printf("\nError opening server socket\n");
-                return 1;
+                perror("Error opening server socket\n");
+                return ERROR;
         }
 
 
@@ -43,19 +43,19 @@ int socket_creation_server(int port)
 
         if(bind(server_socket,(struct sockaddr*)&server_address,sizeof(server_address))<0)
         {
-            printf("Binding failed in the server");
-            return 1;
+            perror("Binding failed in the server");
+            return ERROR;
         }
 
         /*Listening for clients*/
         if(listen(server_socket,LISTEN_MAX) < 0)
         {
-            printf("Error on Listening ");
-            return 1;
+            perror("Error on Listening ");
+            return ERROR;
         }
         else
         {
-            printf("\nlistening.....\n");
+            printf("\nlistening to remote requests.....\n");
         }
 
        
@@ -72,13 +72,13 @@ int socket_creation_server(int port)
         if(new_socket<0)
         {
             perror("Error on accepting client");
-            return 1;
+            return ERROR;
         }
         else
         {
             printf("established connection\n");
         }
-        return 0;
+        return SUCCESS;
 
 }
 
@@ -91,21 +91,22 @@ void *remote_request_callback(void *arg)
 	
 
 	char buffer[MAX_BUFFER_SIZE];
-    char file_name[MAX_BUFFER_SIZE];
     
-    file_descriptors *fd = (file_descriptors *)arg;
-
-    sprintf(file_name,"%s%s/%s",LOG_PATH,fd->file_path,fd->file_name);
-
-    sprintf(buffer,"%s","Remote request task started");
+    
+    memset(buffer,'\0',MAX_BUFFER_SIZE);
+    sprintf(buffer,"%s","DEBUG Remote request task started");
+    mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
     
-	if(socket_creation_server(PORT_NO)!=0)
+	if(socket_creation_server(PORT_NO)== ERROR)
     {
-        return 0;
+        perror("Error on socket creation - killed remote request socket");
+        memset(buffer,'\0',MAX_BUFFER_SIZE);
+        sprintf(buffer,"ERROR Socket for server failed- Killed remote request thread");
+        mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+        pthread_cancel(remote_request_thread);
     } 
 
-    LOG_MESSAGE(file_name,"%s %s %s\n", log_level[0], time_stamp(),buffer);
 
     while(1)
     {

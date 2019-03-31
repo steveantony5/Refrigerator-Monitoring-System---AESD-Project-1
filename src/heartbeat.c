@@ -64,26 +64,80 @@ void *temperature_task()
 
 	/*To get the Process id and Thread Group ID and logging it*/
 	memset(buffer,0,MAX_BUFFER_SIZE);
-    sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
+    sprintf(buffer,"INFO [PID:%d] [TID:%lu]", getpid(), syscall(SYS_gettid));
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	/*creating a timer for temperature task*/
-	setup_timer_POSIX(&timer_id_temp,temp_timer_handler);
-	kick_timer(timer_id_temp, Delay_NS);
+	if((setup_timer_POSIX(&timer_id_temp,temp_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR creating timer for temp failed- Killed temp thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
+
+	if((kick_timer(timer_id_temp, Delay_NS)) == ERROR)
+	{
+		perror("Error on kicking timer for temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR kicking timer for temp failed- Killed temp thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
+	
 
 	/*opening a pipe to send the heartbeat to the main function*/
 	fd1_w = open(Temp, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	if(fd1_w == ERROR)
+	{
+		perror("Error on creating FIFO fd1_w for Temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in temperature sensor init- Killed temp thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
 
 	/*initiating the temperature sensor*/
-	temp_sensor_init();
+	if(temp_sensor_init() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in temperature sensor init");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
 
 	/*Registers to set threshold value*/
-	tlow_reg_write(25);
-	thigh_reg_write(27);
+	if(tlow_reg_write(25) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in temperature sensor threshold set");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(thigh_reg_write(27) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in temperature sensor threshold set");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
 
 	/*configuration registers*/
-	config_reg_write_default();
-	config_reg_read(&configuration);
+	if(config_reg_write_default() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"WARN Failed in temperature config_reg_write_default");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(config_reg_read(&configuration) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"WARN Failed in temperature config_reg_read");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
+	
 
 
 	while(1)
@@ -93,11 +147,17 @@ void *temperature_task()
 		if(FLAG_READ_TEMP)
 		{
 			/*sending heartbeat to the main task*/
-			write(fd1_w, "T", 1);
+			if((write(fd1_w, "T", 1)) == ERROR)
+			{
+				perror("Error on write of temp heartbeat\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"ERROR on sending temp heartbeat");
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
 
 			/*logging the heartbeat*/
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Pulse from temperature thread\n");
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			sprintf(buffer,"DEBUG Pulse from temperature thread");
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
@@ -107,8 +167,8 @@ void *temperature_task()
 				// led_on();
 				// printf("LED ON TEMP\n");
 				// printf("Temperatue sensor error, trying to reconnect\n");
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"Temperatue sensor error,  trying to reconnect");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"ERROR Temperatue sensor error,  trying to reconnect");
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			}
 
@@ -117,19 +177,17 @@ void *temperature_task()
 				// led_off();
 				// printf("LED OFF TEMP\n");
 				float temperature_celcius = temp_read() * 0.0625;
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"ERROR Temperatue in celcius = %f\n", temperature_celcius);
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"INFO Temperatue in celcius = %f", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
-				//printf("T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"DEBUG T-high in celcius = %f", thigh_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
-				//printf("T-low in celcius = %f\n", tlow_reg_read() * 0.0625);
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"DEBUG T-low in celcius = %f", tlow_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				/*setting temperature alert*/
@@ -162,21 +220,49 @@ void *lux_task()
 	char buffer[MAX_BUFFER_SIZE];
 
 	/*log the process id and thread group id of the thread*/
-	sprintf(buffer,"[PID:%d] [TID:%lu]\n", getpid(), syscall(SYS_gettid));
+	memset(buffer,'\0',MAX_BUFFER_SIZE);
+	sprintf(buffer,"INFO [PID:%d] [TID:%lu]", getpid(), syscall(SYS_gettid));
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	/*setting the timer for lux thread*/
-	setup_timer_POSIX(&timer_id_lux,lux_timer_handler);
-	kick_timer(timer_id_lux, Delay_NS);
+	if((setup_timer_POSIX(&timer_id_lux,lux_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR creating timer for lux failed- Killed lux thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+
+	if((kick_timer(timer_id_lux, Delay_NS)) == ERROR)
+	{
+		perror("Error on kicking timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR kicking timer for lux failed- Killed lux thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+	
 
 
 	/*opening a pipe to dump the heartbeat from lux thread to maintask*/
 	fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	if(fd2_w == ERROR)
+	{
+		perror("Error on creating FIFO fd2_w for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in lux sensor init- Killed lux thread");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
 
 	/*setting up the lux sensor*/
 	if(lux_sensor_setup()<0)
 	{
 		perror("Error on lux sensor configuration\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Failed in lux sensor setup");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
 	while(1)
@@ -187,11 +273,18 @@ void *lux_task()
 		{
 
 			/*sends heartbeat*/
-			write(fd2_w, "L", 1);
+			if((write(fd2_w, "L", 1)) == ERROR)
+			{
+				perror("Error on write of lux heartbeat\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"ERROR on sending lux heartbeat");
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+			
 
 			/*logging the heartbeat*/
-			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"INFO Pulse from lux thread\n");
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			sprintf(buffer,"DEBUG Pulse from lux thread");
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			/*introduced delay for adc conversion*/
@@ -202,8 +295,8 @@ void *lux_task()
 				// printf("LED ON LUX\n");
 				perror("Error on reading channels\n");
 				printf("Lux sensor error, trying to reconnect\n");
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"Lux sensor error,  trying to reconnect");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"ERROR Lux sensor error,  trying to reconnect");
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 			}
 
@@ -221,8 +314,8 @@ void *lux_task()
 				 the threshold value is set as 70*/
 				has_state_transition_occurred(lux);
 
-				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"Lux = %f\n",lux);
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				sprintf(buffer,"INFO Lux = %f",lux);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				/*get the current state of the fridge door
@@ -230,23 +323,23 @@ void *lux_task()
 				fridge_state  = get_current_state_fridge(lux);
 				if(fridge_state == BRIGHT)
 				{
-					memset(buffer,0,MAX_BUFFER_SIZE);
-					sprintf(buffer,"INFO Fridge state - Door opened\n");
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					sprintf(buffer,"DEBUG Fridge state - Door opened");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				}
 				else if(fridge_state == DARK)
 				{
-					memset(buffer,0,MAX_BUFFER_SIZE);
-					sprintf(buffer,"Fridge state - Door Closed\n");
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					sprintf(buffer,"DEBUG Fridge state - Door Closed");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				}
 				else if(fridge_state == ERROR)
 				{
 					printf("Fridge in unknown state\n");
-					memset(buffer,0,MAX_BUFFER_SIZE);
-					sprintf(buffer,"Fridge state - unknown\n");
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					sprintf(buffer,"DEBUG Fridge state - unknown");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 				}
 
@@ -282,8 +375,8 @@ void beat_timer_handler(union sigval val)
 	{
 		printf("Temp thread dead\n");
 
-		memset(buffer,0,MAX_BUFFER_SIZE);
-		sprintf(buffer,"Temp thread dead\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Temp thread dead");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	}
@@ -293,8 +386,8 @@ void beat_timer_handler(union sigval val)
 	{
 		printf("Log thread dead\n");
 
-		memset(buffer,0,MAX_BUFFER_SIZE);
-		sprintf(buffer,"Log thread dead\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Log thread dead");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
@@ -303,8 +396,8 @@ void beat_timer_handler(union sigval val)
 	{
 		printf("Lux thread dead\n");
 
-		memset(buffer,0,MAX_BUFFER_SIZE);
-		sprintf(buffer,"Lux thread dead\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Lux thread dead");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
@@ -314,7 +407,13 @@ void beat_timer_handler(union sigval val)
 	Pulse_log_prev = Pulse_log;
 
 	//restarting the heartbeat timer
-	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
+	if((kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD)) == ERROR)
+	{
+		perror("Error on kicking timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR kicking timer for heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
 	
 }
 
@@ -382,8 +481,16 @@ int startup_test()
 
 	/*returns error code for any failure in POST*/
 	if(temp_dead_flag || lux_dead_flag || remote_socket_dead_flag || logger_dead_flag)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Start up test failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 		return ERROR;
+	}
 	
+	memset(buffer,'\0',MAX_BUFFER_SIZE);
+	sprintf(buffer,"INFO Start up test Passed");
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	return SUCCESS;
 }
 
@@ -441,6 +548,10 @@ int main(int argc, char *argv[])
     }
 
 	file_ptr = fopen(file_name, "a+");
+	if(file_ptr == NULL)
+	{
+		perror("Error on creating log file\n");
+	}
 
 
 	pthread_attr_t attr;
@@ -460,6 +571,9 @@ int main(int argc, char *argv[])
 	if(pthread_create(&temperature_thread, &attr, temperature_task, NULL) != 0) 	
 	{
 		perror("Temperature thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Temperature thread creation failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 	else
 	{
@@ -470,6 +584,9 @@ int main(int argc, char *argv[])
 	if(pthread_create(&lux_thread, &attr, lux_task, NULL) != 0)
 	{
 		perror("Lux thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Lux thread creation failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 	else
 	{
@@ -479,7 +596,10 @@ int main(int argc, char *argv[])
 	/*Spawning the remote request thread thread*/
 	if(pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd) != 0)
 	{
-		perror("Reomte socket thread creation failed");
+		perror("Remote socket thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR Remote socket thread creation failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 	else
 	{
@@ -490,15 +610,33 @@ int main(int argc, char *argv[])
 	/*Creating fifo to receive the heartbeat from the threads*/
 	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
 	if(fd1 < 0)
-       	perror("error on opening fd1 Temp heartbeat\n");
+	{
+		perror("error on opening fd1 Temp heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR opening fd1 FIFO Temp heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+       	
 
 	fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
 	if(fd2 < 0)
-       	perror("error on opening fd2 Lux heartbeat\n");
+	{
+		perror("error on opening fd2 Lux heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR opening fd2 FIFO lux heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+       	
 
     fd3 = open(log_t,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
 	if(fd3 < 0)
-       	perror("error on opening fd3 Lux heartbeat\n");
+	{
+		perror("error on opening fd3 Lux heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR opening fd3 FIFO log heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+       	
 
     sleep(1);
 
@@ -521,8 +659,22 @@ int main(int argc, char *argv[])
 	char pulse[1];
 
 	/*Creating a timer to check the liveliness of the threads at regular intervals*/
-	setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler);
-	kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD);
+	if((setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR creating timer for heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if((kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD)) == ERROR)
+	{
+		perror("Error on kicking timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"ERROR kicking timer for heartbeat failed");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
 	
 
 	/*Heat beat tracker*/
@@ -534,6 +686,7 @@ int main(int argc, char *argv[])
 		{
 			Pulse_temp++;
 		}
+
 		
 		/*Checks if the heartbeat is received from lux thread*/
 		memset(pulse,0,1);
@@ -618,7 +771,9 @@ void hanler_kill_main(int num)
 void hanler_kill_log(int num)
 {
 	printf("Encountered SIGALRM signal\nExiting log thread\n");
-	close(fd3_w);
+	mq_close(msg_queue);
+    mq_unlink(QUEUE_NAME);
+    close(fd3_w);
 	stop_timer(timer_id_log);
 	pthread_cancel(logger_thread); 
 
