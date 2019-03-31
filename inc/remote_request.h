@@ -21,6 +21,9 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "lux.h"
 #include "temp.h"
