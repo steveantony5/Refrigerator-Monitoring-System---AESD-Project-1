@@ -699,6 +699,7 @@ int main(int argc, char *argv[])
 			memset(buffer,'\0',MAX_BUFFER_SIZE);
 			sprintf(buffer,"ERROR Temperature start up test failed");
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			led_on(1);
 			kill(pid, SIGUSR1);
 		}
 		if(lux_dead_flag)
@@ -706,6 +707,7 @@ int main(int argc, char *argv[])
 			memset(buffer,'\0',MAX_BUFFER_SIZE);
 			sprintf(buffer,"ERROR Lux start up test failed");
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			led_on(0);
 			kill(pid, SIGUSR2);
 		}
 		if(logger_dead_flag)
@@ -781,11 +783,14 @@ void hanler_kill_temp(int num)
 	printf("Encountered SIGUSR1 signal\n");
 	static int FLAG = 1;
 
-	if((temperature_thread_creation == 0) && (FLAG == 1))
+	if((temperature_thread_creation == 1) && (FLAG == 1))
 	{
 		printf("Exiting temperature thread\n");
-		close(fd1_w);
-		stop_timer(timer_id_temp);
+		if(start_temp_thread)
+		{
+			close(fd1_w);
+			stop_timer(timer_id_temp);
+		}
 		pthread_cancel(temperature_thread);
 		FLAG = 0;
 	}
@@ -803,11 +808,15 @@ void hanler_kill_lux(int num)
 	printf("Encountered SIGUSR2 signal\n");
 	static int FLAG = 1;
 
-	if((lux_thread_creation == 0) && (FLAG == 1))
+	if((lux_thread_creation == 1) && (FLAG == 1))
 	{
 		printf("Exiting lux thread\n");
-		close(fd2_w);
-		stop_timer(timer_id_lux);
+		
+		if(start_lux_thread)
+		{
+			close(fd2_w);
+			stop_timer(timer_id_lux);
+		}
 		pthread_cancel(lux_thread);
 		FLAG = 0;
 	}
@@ -852,7 +861,7 @@ void hanler_kill_log(int num)
 	printf("Encountered SIGALRM signal\n");
 	static int FLAG = 1;
 
-	if((logger_thread_creation == 0) && (FLAG == 1))
+	if((logger_thread_creation == 1) && (FLAG == 1))
 	{
 		printf("\nExiting log thread\n");
 		mq_close(msg_queue);
