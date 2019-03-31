@@ -12,6 +12,8 @@ pthread_t temperature_thread , lux_thread;
 
 pthread_mutex_t lock_res;
 
+pid_t pid;
+
 /*Variables to store the heartbeat count from the threads*/
 int Pulse_temp = 0;
 int Pulse_lux = 0;
@@ -576,7 +578,7 @@ int main(int argc, char *argv[])
 	int8_t i = 0;
 
 	/*get the process id of the process*/
-	pid_t pid = getpid();
+	pid = getpid();
 	printf("\n\nPID of the process - %d\n",getpid());
 
 	/*Assigned a signal handler for each thread to control it*/
@@ -865,6 +867,11 @@ void hanler_kill_main(int num)
 {
 
 	printf("Encountered SIGTERM signal\nExiting main thread\n");
+	
+	kill(pid, SIGALRM);
+	kill(pid, SIGUSR1);
+	kill(pid, SIGUSR2);
+
 	close(fd1);
 	close(fd2);
 	close(fd3);
