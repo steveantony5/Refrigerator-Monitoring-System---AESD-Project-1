@@ -734,10 +734,21 @@ int main(int argc, char *argv[])
 ***********************************************/
 void hanler_kill_temp(int num)
 {
-	printf("Encountered SIGUSR1 signal\nExiting temperature thread\n");
-	close(fd1_w);
-	stop_timer(timer_id_temp);
-	pthread_cancel(temperature_thread); 
+	printf("Encountered SIGUSR1 signal\n");
+	static int FLAG = 1;
+
+	if((temperature_thread_creation == 0) && (FLAG == 1))
+	{
+		printf("Exiting temperature thread\n");
+		close(fd1_w);
+		stop_timer(timer_id_temp);
+		pthread_cancel(temperature_thread);
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Temperature thread already dead\n");
+	} 
 }
 
 /***********************************************
@@ -745,10 +756,21 @@ void hanler_kill_temp(int num)
 ***********************************************/
 void hanler_kill_lux(int num)
 {
-	printf("Encountered SIGUSR2 signal\nExiting lux thread\n");
-	close(fd2_w);
-	stop_timer(timer_id_lux);
-	pthread_cancel(lux_thread); 
+	printf("Encountered SIGUSR2 signal\n");
+	static int FLAG = 1;
+
+	if((lux_thread_creation == 0) && (FLAG == 1))
+	{
+		printf("Exiting lux thread\n");
+		close(fd2_w);
+		stop_timer(timer_id_lux);
+		pthread_cancel(lux_thread);
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Lux thread already dead\n");
+	}
 
 }
 
@@ -757,6 +779,7 @@ void hanler_kill_lux(int num)
 ***********************************************/
 void hanler_kill_main(int num)
 {
+
 	printf("Encountered SIGTERM signal\nExiting main thread\n");
 	close(fd1);
 	close(fd2);
@@ -782,11 +805,22 @@ void hanler_kill_main(int num)
 ***********************************************/
 void hanler_kill_log(int num)
 {
-	printf("Encountered SIGALRM signal\nExiting log thread\n");
-	mq_close(msg_queue);
-    mq_unlink(QUEUE_NAME);
-    close(fd3_w);
-	stop_timer(timer_id_log);
-	pthread_cancel(logger_thread); 
+	printf("Encountered SIGALRM signal\n");
+	static int FLAG = 1;
+
+	if((logger_thread_creation == 0) && (FLAG == 1))
+	{
+		printf("\nExiting log thread\n");
+		mq_close(msg_queue);
+    	mq_unlink(QUEUE_NAME);
+    	close(fd3_w);
+		stop_timer(timer_id_log);
+		pthread_cancel(logger_thread); 
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Logger thread already dead\n");
+	}
 
 }
