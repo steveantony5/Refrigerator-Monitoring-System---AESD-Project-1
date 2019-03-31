@@ -29,7 +29,7 @@ uint16_t CH1;
 
 #define WRITE (1)
 #define COMMAND (2)
-#define READ (2)
+#define READ (0)
 #define NONE (0)
 /*****************************************************************
 					setting up lux sensor
@@ -58,8 +58,8 @@ int lux_sensor_setup()
 	}
 
 	/*Writing to control register*/
-	ret_status = register_data = 0x03;
-	byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	register_data = 0x03;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on CONTROL_REGISTER of  lux sensor");
