@@ -122,13 +122,13 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
          		printf("tempc Request sent to remote request\n");
                 float tempc = temp_in_celcius();
-                if(tempc == ERROR)
+                if((tempc != ERROR) && (temp_dead_flag != 1))
                 {
-                    sprintf(buffer,"Error on temperature sensor\n");
+                    sprintf(buffer,"Temperature in Celcius = %f\n",tempc);
                 }
                 else
                 {
-                    sprintf(buffer,"Temperature in Celcius = %f\n",tempc);
+                    sprintf(buffer,"Error on temperature sensor\n");
                 }
 
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
@@ -139,33 +139,34 @@ void *remote_request_callback(void *arg)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("tempk Request sent to remote request\n");
-                float tempk = temp_in_celcius();
-                if(tempk == ERROR)
+                float tempk = temp_in_kelvin();
+                if((tempk != ERROR) && (temp_dead_flag != 1))
                 {
-                    sprintf(buffer,"Error on temperature sensor\n");
+                    sprintf(buffer,"Temperature in Kelvin = %f\n",tempk);
                 }
                 else
                 {
-                    sprintf(buffer,"Temperature in Kelvin = %f\n",(tempk+273.15));
+                    sprintf(buffer,"Error on temperature sensor\n");
                 }
 
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
 
-            /*receives temperature request in Farenheit from remote request client*/
+            /*receives temperature request in fahrenheit from remote request client*/
             else if(strcmp(message,"tempf") == 0)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("tempf Request sent to remote request\n");
-                float tempf = temp_in_celcius();
-                if(tempf == ERROR)
+                float tempf = temp_in_fahrenheit();
+                if((tempf != ERROR) && (temp_dead_flag != 1))
                 {
-                    sprintf(buffer,"Error on temperature sensor\n");
+                    sprintf(buffer,"Temperature in fahrenheit = %f\n",tempf);
                 }
                 else
                 {
-                    sprintf(buffer,"Temperature in Farenheit = %f\n",((tempf * 9/5) + 32));
+                    sprintf(buffer,"Error on temperature sensor\n");
                 }
+
 
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
             }
@@ -176,13 +177,13 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("tempk Request sent to remote request\n");
                 float lux = get_lux();
-                if(lux == ERROR)
+                if((lux != ERROR) && (lux_dead_flag != 1))
                 {
-                    sprintf(buffer,"Error on lux sensor\n");
+                    sprintf(buffer,"brightness in lux = %f\n",lux);
                 }
                 else
                 {
-                    sprintf(buffer,"brightness in lux = %f\n",lux);
+                    sprintf(buffer,"Error on lux sensor\n");
                 }
 
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
@@ -195,17 +196,17 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("fridge state Request sent to remote request\n");
                 fridge_state = get_current_state_fridge(get_lux());
-                if(fridge_state == ERROR)
-                {
-                    sprintf(buffer,"Fridge in unknown state\n");
-                }
-                else if(fridge_state == BRIGHT)
+                if((fridge_state == BRIGHT) && (lux_dead_flag != 1))
                 {
                     sprintf(buffer,"Fridge door is opened\n");
                 }
-                else if(fridge_state == DARK)
+                else if((fridge_state == DARK) && (lux_dead_flag != 1))
                 {
-                    sprintf(buffer,"Fridge door is Closed\n");
+                    sprintf(buffer,"Fridge door is closed\n");
+                }
+                else
+                {
+                    sprintf(buffer,"Fridge in unknown state\n");
                 }
 
                 send(new_socket, buffer, MAX_BUFFER_SIZE, 0);

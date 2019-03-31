@@ -43,6 +43,9 @@ pthread_t remote_request_thread;
 char message[MAX_BUFFER_SIZE];
 int new_socket, server_socket;
 
+extern int temp_dead_flag;
+extern int lux_dead_flag;
+
 /*****************************************************************
 						Function Protoypes
 *****************************************************************/
