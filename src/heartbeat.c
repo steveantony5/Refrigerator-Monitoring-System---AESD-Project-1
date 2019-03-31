@@ -162,11 +162,10 @@ void *temperature_task()
 
 
 			/*reading the data register*/
-			if(temp_read() == TEMP_ERROR)
+			if(temp_read() == TEMP_ERROR || thigh_reg_read() == TEMP_ERROR || tlow_reg_read() == TEMP_ERROR)
 			{
-				// led_on();
-				// printf("LED ON TEMP\n");
-				// printf("Temperatue sensor error, trying to reconnect\n");
+				led_on(1);
+				
 				memset(buffer,'\0',MAX_BUFFER_SIZE);
 				sprintf(buffer,"ERROR Temperatue sensor error,  trying to reconnect");
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
@@ -174,8 +173,8 @@ void *temperature_task()
 
 			else
 			{
-				// led_off();
-				// printf("LED OFF TEMP\n");
+				led_off(1);
+				
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,'\0',MAX_BUFFER_SIZE);
 				sprintf(buffer,"INFO Temperatue in celcius = %f", temperature_celcius);
@@ -195,9 +194,9 @@ void *temperature_task()
 				int alert = config_read_alert();
 				
 				if(alert == 1)
-					led_off();
+					led_off(2);
 				else
-					led_on();
+					led_on(2);
 			}
 
 			/*clearing the flag which will be set when the timer of temperature will be triggered*/			
@@ -292,7 +291,7 @@ void *lux_task()
 			usleep(500);
 			if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
 			{
-				// led_on();
+				led_on(0);
 				// printf("LED ON LUX\n");
 				perror("Error on reading channels\n");
 				printf("Lux sensor error, trying to reconnect\n");
@@ -303,7 +302,7 @@ void *lux_task()
 
 			else
 			{
-				// led_off();
+				led_off(0);
 				// printf("LED OFF LUX\n");
 
 				/*measuring lux value*/
@@ -501,11 +500,14 @@ int startup_test()
 
 int main(int argc, char *argv[])
 {
+
 	if(argc < 3)
 	{
 		perror("Please enter the <log file name> follwed by <log file folder name>");
 		exit(ERROR);
 	}
+
+	int8_t i = 0;
 
 	/*get the process id of the process*/
 	pid_t pid = getpid();
@@ -539,8 +541,11 @@ int main(int argc, char *argv[])
 	/*creating the looger file*/
 	logger_init(file_name);
 
-	gpio_pin_init();
-	led_off();
+	for(i=0; i<3; i++)
+	{
+		gpio_pin_init(i);
+		led_off(i);
+	}
 
 	if (pthread_mutex_init(&lock_res, NULL) != 0) 
     { 

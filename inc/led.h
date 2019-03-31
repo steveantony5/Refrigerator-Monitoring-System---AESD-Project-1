@@ -18,16 +18,24 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <stdint.h>
+#include <string.h>
 #include "common.h"
 
+/*****************************************************************
+						     Macros
+*****************************************************************/
+
+#define USR_LED_BASE 53
+#define MAX_BUFFER_SIZE 100
 
 /*****************************************************************
 						Function prototypes
 *****************************************************************/
-int led_on();
+int led_on(int8_t);
 
-int led_off();
+int led_off(int8_t);
 
-int gpio_pin_init();
+int gpio_pin_init(int8_t);
 
 #endif

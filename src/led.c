@@ -11,19 +11,17 @@
 #include "led.h"
 
 
-int led_on()
+int led_on(int8_t pin)
 {
-	FILE *file_ptr = fopen("/sys/class/gpio/gpio53/value", "w");
-	
-	fputc('0', file_ptr);
-	fclose(file_ptr);	
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
 
-	return SUCCESS;
-}
+	gpio_pin = USR_LED_BASE + pin;
 
-int led_off()
-{
-	FILE *file_ptr = fopen("/sys/class/gpio/gpio53/value", "w");
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
+
+	FILE *file_ptr = fopen(gpio_path, "w");
 	
 	fputc('1', file_ptr);
 	fclose(file_ptr);	
@@ -31,14 +29,39 @@ int led_off()
 	return SUCCESS;
 }
 
-int gpio_pin_init()
+int led_off(int8_t pin)
 {
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
+
+	gpio_pin = USR_LED_BASE + pin;
+
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
+
+	FILE *file_ptr = fopen(gpio_path, "w");
+	
+	fputc('0', file_ptr);
+	fclose(file_ptr);	
+
+	return SUCCESS;
+}
+
+int gpio_pin_init(int8_t pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
+
+	gpio_pin = USR_LED_BASE + pin;
+
 	FILE *file_ptr = fopen("/sys/class/gpio/export", "w");
 	
-	fprintf(file_ptr,"%d",53);
+	fprintf(file_ptr,"%d", gpio_pin);
 	fclose(file_ptr);
 
-	file_ptr = fopen("/sys/class/gpio/gpio53/direction", "w+");
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/direction");
+	file_ptr = fopen(gpio_path, "w+");
 
 	fprintf(file_ptr,"out");
 	fclose(file_ptr);
