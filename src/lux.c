@@ -33,11 +33,14 @@ uint16_t CH1;
 *****************************************************************/
 int lux_sensor_setup()
 {
+	int ret_status;
 
 	pthread_mutex_lock(&lock_res);
+	ret_status = i2c_setup(&file_des_lux,2,0x39);
+	pthread_mutex_unlock(&lock_res);
 
 	/*i2c setup*/
-	if((i2c_setup(&file_des_lux,2,0x39)) == ERROR)
+	if(ret_status == ERROR)
 	{
 		perror("Error on i2c bus set up for lux sensor");
 		return ERROR;
@@ -46,7 +49,11 @@ int lux_sensor_setup()
 	/*command to write on control register*/
 	register_data = WRITE_COMMAND | CONTROL_REGISTER |CLEAR_PENDING_INTERUPTS;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -55,7 +62,11 @@ int lux_sensor_setup()
 	/*Writing to control register*/
 	register_data = 0x03;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if (ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -64,7 +75,11 @@ int lux_sensor_setup()
 	/*command to write on TIMING_REGISTER*/
 	register_data = WRITE_COMMAND | TIMING_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -73,7 +88,11 @@ int lux_sensor_setup()
 	/*Writing to timing register*/
 	register_data = 0x12;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the timing register\n");
 		return ERROR;
@@ -83,7 +102,11 @@ int lux_sensor_setup()
 	/*command to write as a word for high threshold register */
 	register_data = WRITE_COMMAND_WORD | THRESHHIGHLOW;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -92,7 +115,11 @@ int lux_sensor_setup()
 	/*Writing to threshold register*/
 	register_data_word = 0x0BB8; //set to 3000
 
-	if (write(file_des_lux, &register_data_word, 2) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data_word, 2) ;
+	pthread_mutex_unlock(&lock_res);
+
+	if (ret_status == ERROR)
 	{
 		perror("Error on writing the high threshold register\n");
 		return ERROR;
@@ -101,7 +128,11 @@ int lux_sensor_setup()
 	/*command to write for INTERRUPT register */
 	register_data = WRITE_COMMAND | INTERRUPT | CLEAR_PENDING_INTERUPTS;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
+	if (ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
@@ -110,13 +141,15 @@ int lux_sensor_setup()
 	/*Writing to INTERRUPT register*/
 	register_data = 0x12; 
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the interrupt register\n");
 		return ERROR;
 	}
-
-	pthread_mutex_unlock(&lock_res);
 
 	return SUCCESS;
 
@@ -127,25 +160,32 @@ int lux_sensor_setup()
 *****************************************************************/
 int indication_register()
 {
-	pthread_mutex_lock(&lock_res);
 	
+	int ret_status;
+
 	/*command to write on INDICATION_REGISTER*/
 	register_data = WRITE_COMMAND | INDICATION_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == ERROR)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the control register\n");
 		return ERROR;
 	}
 
+	pthread_mutex_lock(&lock_res);
+	ret_status = read(file_des_lux, &register_data, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
 	/*Reading from INDICATION_REGISTER*/
-	if (read(file_des_lux, &register_data, 1) == ERROR)
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the interrupt register\n");
 		return ERROR;
 	}
-
-	pthread_mutex_unlock(&lock_res);
 
 
 	/*logging part numer and revision number of lux sensor*/
@@ -171,19 +211,26 @@ int indication_register()
 int read_channel_0()
 {
 
-	pthread_mutex_lock(&lock_res);
-
+	int ret_status;
 	/*command to read on DATA0LOW register*/
 	register_data = WRITE_COMMAND | DATA0LOW_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if (ret_status == ERROR)
 	{
 		perror("Error on writing the command register\n");
 		return ERROR;
 	}
 
+	pthread_mutex_lock(&lock_res);
+	ret_status = read(file_des_lux, &LSB_0, 1);
+	pthread_mutex_unlock(&lock_res);
+
 	/*reading CH0 value lower byte*/
-	if (read(file_des_lux, &LSB_0, 1) == -1)
+	if ( ret_status == ERROR)
 	{
 		perror("Error on reading the DATA0LOW_REGISTER register\n");
 		return ERROR;
@@ -192,14 +239,23 @@ int read_channel_0()
 	/*command to read on DATA0HIGH register*/
 	register_data = WRITE_COMMAND | DATA0HIGH_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the command register\n");
 		return ERROR;
 	}
 
+	pthread_mutex_lock(&lock_res);
+	ret_status = read(file_des_lux, &MSB_0, 1);
+	pthread_mutex_unlock(&lock_res);
+
 	/*reading CH0 value upper byte*/
-	if (read(file_des_lux, &MSB_0, 1) == -1)
+	if ( ret_status == -1)
 	{
 		perror("Error on reading the DATA0HIGH_REGISTER register\n");
 		return ERROR;
@@ -209,7 +265,6 @@ int read_channel_0()
 	CH0 = (MSB_0 << 8);
 	CH0 |= LSB_0;
 
-	pthread_mutex_unlock(&lock_res);
 
 	return SUCCESS;
 
@@ -221,19 +276,26 @@ int read_channel_0()
 *****************************************************************/
 int read_channel_1()
 {
-	pthread_mutex_lock(&lock_res);
-
+	int ret_status;
 	/*command to read on DATA1LOW register*/
 	register_data = WRITE_COMMAND | DATA1LOW_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the command register\n");
 		return ERROR;
 	}
 
+	pthread_mutex_lock(&lock_res);
+	ret_status = read(file_des_lux, &LSB_1, 1);
+	pthread_mutex_unlock(&lock_res);
+
 	/*reading CH1 value lower byte*/
-	if (read(file_des_lux, &LSB_1, 1) == -1)
+	if ( ret_status == ERROR)
 	{
 		perror("Error on reading the DATA1LOW_REGISTER register\n");
 		return ERROR;
@@ -242,14 +304,22 @@ int read_channel_1()
 	/*command to read on DATA1HIGH register*/
 	register_data = WRITE_COMMAND | DATA1HIGH_REGISTER;
 
-	if (write(file_des_lux, &register_data, 1) == -1)
+	pthread_mutex_lock(&lock_res);
+	ret_status = write(file_des_lux, &register_data, 1);
+	pthread_mutex_unlock(&lock_res);
+
+	if ( ret_status == ERROR)
 	{
 		perror("Error on writing the command register\n");
 		return ERROR;
 	}
 
+	pthread_mutex_lock(&lock_res);
+	ret_status = read(file_des_lux, &MSB_1, 1) ;
+	pthread_mutex_unlock(&lock_res);
+
 	/*reading CH1 value upper byte*/
-	if (read(file_des_lux, &MSB_1, 1) == -1)
+	if ( ret_status == ERROR)
 	{
 		perror("Error on reading the DATA1HIGH_REGISTER register\n");
 		return ERROR;
@@ -259,7 +329,6 @@ int read_channel_1()
 	CH1 = (MSB_1 << 8);
 	CH1 |= LSB_1;
 
-	pthread_mutex_unlock(&lock_res);
 	// printf("CH1 %d\n",CH1);
 	return SUCCESS;
 
