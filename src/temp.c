@@ -162,9 +162,66 @@ int config_sd_continuous()
 	return config_reg_write_update(SD_MODE, 1);	
 }
 
-int config_fault_bits()
+int config_fault_bits_1()
 {
-	return config_reg_write_update(2<<11, 0);
+	int ret_val;
+	ret_val = config_reg_write_update(F0, 1);
+	
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+
+int config_fault_bits_2()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(F0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_fault_bits_4()
+{
+	int ret_val;
+	
+	ret_val = config_reg_write_update(F0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+
+int config_fault_bits_6()
+{
+	int ret_val;
+	
+	ret_val = config_reg_write_update(F0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
 }
 
 int config_em_normal()
@@ -196,8 +253,15 @@ int config_read_em()
 
 int config_conversion_rate_0_25HZ()
 {
-	config_reg_write_update(CR0, 1);
-	config_reg_write_update(CR1, 1);
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
 
 	return SUCCESS;
 
@@ -205,25 +269,46 @@ int config_conversion_rate_0_25HZ()
 
 int config_conversion_rate_1HZ()
 {
-	config_reg_write_update(CR0, 0);
-	config_reg_write_update(CR1, 1);
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
 
 	return SUCCESS;
 }
 
 int config_conversion_rate_4HZ()
 {
-	config_reg_write_update(CR0, 1);
-	config_reg_write_update(CR1, 0);
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
 
 	return SUCCESS;
 }
 
 int config_conversion_rate_8HZ()
 {
-	config_reg_write_update(CR0, 0);
-	config_reg_write_update(CR1, 0);
+	int ret_val;
 
+	ret_val = config_reg_write_update(CR0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+	
 	return SUCCESS;
 }
 

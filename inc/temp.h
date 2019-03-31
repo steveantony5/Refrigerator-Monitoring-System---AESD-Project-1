@@ -31,6 +31,8 @@
 #define EM_MODE (1 << 4) // Bit mask for extended mode configuration
 #define CR0		(1 << 6) // Bit mask for conversion mode configuration 1st bit
 #define CR1		(1 << 7) // Bit mask for conversion mode configuration 2nd bit
+#define F0		(1 << 11) //Bit mask for fault bit configuration 1st bit
+#define F1		(1 << 12) //Bit mask for fault bit configuration 2nd bit
 
 
 #define READ_CONVERSION (0xC0) 
@@ -257,9 +259,9 @@ int config_sd();
 
 /**
 --------------------------------------------------------------------------------------------
-config_fault_bits
+config_fault_bits_1
 --------------------------------------------------------------------------------------------
-*	This function will write to the fault bits in the configuration register.
+*	This function will write 00 to the fault bits in the configuration register.
 *
 * 	@\param
 *
@@ -267,7 +269,52 @@ config_fault_bits
 * 					On failure it returns -1
 *
 */
-int config_fault_bits();
+int config_fault_bits_1();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_2
+--------------------------------------------------------------------------------------------
+*	This function will write 01 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_2();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_4
+--------------------------------------------------------------------------------------------
+*	This function will write 10 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_4();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_6
+--------------------------------------------------------------------------------------------
+*	This function will write 11 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_6();
 
 /**
 --------------------------------------------------------------------------------------------

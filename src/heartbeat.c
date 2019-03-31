@@ -130,6 +130,13 @@ void *temperature_task()
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
+	if(config_fault_bits_6() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"WARN Failed in temperature config_fault_bits_6");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
 	if(config_reg_read(&configuration) == ERROR)
 	{
 		memset(buffer,'\0',MAX_BUFFER_SIZE);
@@ -138,7 +145,6 @@ void *temperature_task()
 	}
 	
 	
-
 
 	while(1)
 	{
