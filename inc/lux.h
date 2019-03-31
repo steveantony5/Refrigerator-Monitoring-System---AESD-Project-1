@@ -25,7 +25,7 @@
 #define WRITE_COMMAND (0x80)
 #define WRITE_COMMAND_WORD (0xA0)
 
-extern pthread_mutex_t lock_res;
+
 
 int byte_access_lux_register(int , uint8_t ,int  , uint8_t *, uint8_t );
 int word_access_lux_register(int , uint8_t ,int  ,uint16_t *, uint8_t );

@@ -27,10 +27,7 @@ uint16_t LSB_1;
 uint16_t CH0;
 uint16_t CH1;
 
-#define WRITE (1)
-#define COMMAND (2)
-#define READ (0)
-#define NONE (0)
+
 /*****************************************************************
 					setting up lux sensor
 *****************************************************************/

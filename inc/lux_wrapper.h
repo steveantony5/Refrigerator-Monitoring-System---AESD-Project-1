@@ -41,6 +41,11 @@
 #define CLEAR_PENDING_INTERUPTS (0x40)
 
 #define THRESHOLD_FOR_STATE_CHANGE (70)
+
+#define WRITE (1)
+#define COMMAND (2)
+#define READ (0)
+#define NONE (0)
 /*****************************************************************
 						Global declaration
 *****************************************************************/

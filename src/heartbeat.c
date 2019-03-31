@@ -10,7 +10,7 @@ timer_t timer_id_temp, timer_id_lux , timer_id_heartbeat;
 
 pthread_t temperature_thread , lux_thread;
 
-pthread_mutex_t lock_res;
+extern pthread_mutex_t lock_res;
 
 pid_t pid;
 
@@ -807,7 +807,6 @@ int main(int argc, char *argv[])
 	return SUCCESS;
 
 }
-
 /***********************************************
   Signal handler for killing temperature thread
 ***********************************************/
