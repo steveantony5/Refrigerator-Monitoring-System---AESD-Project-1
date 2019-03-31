@@ -10,10 +10,11 @@ int FLAG_LOG;
 
 const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
-const int user_select_log_level = 3;
+const int user_select_log_level = 0;
 
 typedef enum log_level_enum{
-    Debug,
+    Nolog = -1,
+    Debug = 0,
     Info,
     Warn,
     Error
@@ -87,7 +88,11 @@ void *logger_thread_callback(void *arg)
 	    {
 			pthread_mutex_lock(&lock);
 
-            sscanf(buffer,"%s", logger_level);
+            sscanf(buffer,"%s",logger_level);
+
+            #ifdef DEBUG
+            printf("Log level = %s\n", logger_level);
+            #endif
             
             if(strcmp(logger_level, "ERROR") == 0)
                 received_log_level = Error;
@@ -95,11 +100,13 @@ void *logger_thread_callback(void *arg)
                 received_log_level = Warn;
             else if(strcmp(logger_level, "DEBUG") == 0)
                 received_log_level = Debug;
-            else
+            else if(strcmp(logger_level, "INFO") == 0)
                 received_log_level = Info;
+            else
+                received_log_level = Nolog;
 
             if(received_log_level >= user_select_log_level)
-                LOG_MESSAGE(file_name,"%s %s %s\n", logger_level, time_stamp(), buffer);
+                LOG_MESSAGE(file_name,"%s -----> [TIMESTAMP] %s\n", buffer, time_stamp());
 			
             memset(buffer,0,MAX_BUFFER_SIZE);
             pthread_mutex_unlock(&lock);

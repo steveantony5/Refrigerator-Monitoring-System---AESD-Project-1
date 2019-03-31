@@ -118,7 +118,7 @@ void *temperature_task()
 				// printf("LED OFF TEMP\n");
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,0,MAX_BUFFER_SIZE);
-				sprintf(buffer,"Temperatue in celcius = %f\n", temperature_celcius);
+				sprintf(buffer,"ERROR Temperatue in celcius = %f\n", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
@@ -191,7 +191,7 @@ void *lux_task()
 
 			/*logging the heartbeat*/
 			memset(buffer,0,MAX_BUFFER_SIZE);
-			sprintf(buffer,"Pulse from lux thread\n");
+			sprintf(buffer,"INFO Pulse from lux thread\n");
 			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 			/*introduced delay for adc conversion*/
@@ -231,7 +231,7 @@ void *lux_task()
 				if(fridge_state == BRIGHT)
 				{
 					memset(buffer,0,MAX_BUFFER_SIZE);
-					sprintf(buffer,"Fridge state - Door opened\n");
+					sprintf(buffer,"INFO Fridge state - Door opened\n");
 					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 				}
