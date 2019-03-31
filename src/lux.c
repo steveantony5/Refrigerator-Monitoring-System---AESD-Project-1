@@ -27,6 +27,7 @@ int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t
 	}
 	else if (mode == 0) //read
 	{
+		*reg_data = 0x00;
 		pthread_mutex_lock(&lock_res);
 		ret_status = read(fd, reg_data, 1);
 		pthread_mutex_unlock(&lock_res);
@@ -41,10 +42,11 @@ int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t
 	}
 	else if (mode == 2) //command
 	{
-		*reg_data = WRITE_COMMAND | register_address | flags;
+		uint8_t  command;
+		command = WRITE_COMMAND | register_address | flags;
 
 		pthread_mutex_lock(&lock_res);
-		ret_status = write(fd, reg_data, 1);
+		ret_status = write(fd, &command, 1);
 		pthread_mutex_unlock(&lock_res);
 
 		if ( ret_status == ERROR)
@@ -69,7 +71,7 @@ int word_access_lux_register(int fd, uint8_t register_address,int mode ,uint16_t
 	{
 
 		pthread_mutex_lock(&lock_res);
-		ret_status = write(fd, reg_data, 1);
+		ret_status = write(fd, reg_data, 2);
 		pthread_mutex_unlock(&lock_res);
 
 		if ( ret_status == ERROR)
@@ -83,7 +85,7 @@ int word_access_lux_register(int fd, uint8_t register_address,int mode ,uint16_t
 	else if (mode == 0) //read
 	{
 		pthread_mutex_lock(&lock_res);
-		ret_status = read(fd, reg_data, 1);
+		ret_status = read(fd, reg_data, 2);
 		pthread_mutex_unlock(&lock_res);
 
 		/*reading CH1 value lower byte*/
@@ -99,7 +101,7 @@ int word_access_lux_register(int fd, uint8_t register_address,int mode ,uint16_t
 		*reg_data = WRITE_COMMAND | register_address | flags;
 
 		pthread_mutex_lock(&lock_res);
-		ret_status = write(fd, reg_data, 1);
+		ret_status = write(fd, reg_data, 2);
 		pthread_mutex_unlock(&lock_res);
 
 		if ( ret_status == ERROR)
