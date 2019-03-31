@@ -27,13 +27,14 @@
  ***************************************/
 #define TEMP_ADDR 0x48 // Slave address of temperature sensor
 
-#define SD_MODE (1 << 8) // Bit mask for shutdown configuration
-#define EM_MODE (1 << 4) // Bit mask for extended mode configuration
-#define CR0		(1 << 6) // Bit mask for conversion mode configuration 1st bit
-#define CR1		(1 << 7) // Bit mask for conversion mode configuration 2nd bit
-#define F0		(1 << 11) //Bit mask for fault bit configuration 1st bit
-#define F1		(1 << 12) //Bit mask for fault bit configuration 2nd bit
-
+#define SD_MODE  (1 << 8) // Bit mask for shutdown configuration
+#define EM_MODE  (1 << 4) // Bit mask for extended mode configuration
+#define CR0		 (1 << 6) // Bit mask for conversion mode configuration 1st bit
+#define CR1		 (1 << 7) // Bit mask for conversion mode configuration 2nd bit
+#define F0		 (1 << 11) //Bit mask for fault bit configuration 1st bit
+#define F1		 (1 << 12) //Bit mask for fault bit configuration 2nd bit
+#define TM_MODE	 (1 << 9)
+#define POL_MODE (1 << 10)
 
 #define READ_CONVERSION (0xC0) 
 #define READ_FAULT_BITS (0x18)
@@ -255,6 +256,67 @@ config_sd
 *
 */
 int config_sd();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_low
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_low();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_high
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_high();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_comparator
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_comparator();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_interrupt
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_interrupt();
+
 
 
 /**

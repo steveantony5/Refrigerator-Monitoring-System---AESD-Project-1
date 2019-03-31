@@ -159,6 +159,31 @@ int config_sd_continuous()
 	return config_reg_write_update(SD_MODE, 1);	
 }
 
+
+int config_pol_alert_active_low()
+{
+	return config_reg_write_update(POL_MODE, 1);	
+}
+
+
+int config_pol_alert_active_high()
+{
+	return config_reg_write_update(POL_MODE, 0);	
+}
+
+
+int config_tm_comparator()
+{
+	return config_reg_write_update(TM_MODE, 1);	
+}
+
+
+int config_tm_interrupt()
+{
+	return config_reg_write_update(TM_MODE, 0);	
+}
+
+
 int config_fault_bits_1()
 {
 	int ret_val;

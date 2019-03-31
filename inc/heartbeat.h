@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <poll.h>
 /*****************************************************************
 						Function Protypes
 *****************************************************************/

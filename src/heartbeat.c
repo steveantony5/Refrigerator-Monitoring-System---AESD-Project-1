@@ -113,14 +113,14 @@ void *temperature_task()
 	}
 
 	/*Registers to set threshold value*/
-	if(tlow_reg_write(25) == ERROR)
+	if(tlow_reg_write(27) == ERROR)
 	{
 		memset(buffer,'\0',MAX_BUFFER_SIZE);
 		sprintf(buffer,"ERROR Failed in temperature sensor threshold set");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
-	if(thigh_reg_write(27) == ERROR)
+	if(thigh_reg_write(29) == ERROR)
 	{
 		memset(buffer,'\0',MAX_BUFFER_SIZE);
 		sprintf(buffer,"ERROR Failed in temperature sensor threshold set");
@@ -133,6 +133,13 @@ void *temperature_task()
 	{
 		memset(buffer,'\0',MAX_BUFFER_SIZE);
 		sprintf(buffer,"WARN Failed in temperature config_reg_write_default");
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(config_tm_interrupt() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		sprintf(buffer,"WARN Failed in temperature config_tm_interrupt");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 	}
 
@@ -153,6 +160,13 @@ void *temperature_task()
 	#ifdef DEBUG
 	printf("FAULT BITS AFTER CONFIG = %x\n",config_read_fault_bits());
 	#endif
+
+	int fd = open("/sys/class/gpio/gpio49/value", O_RDONLY);
+	int timeout = 100;
+	struct pollfd fds[1];
+
+	fds[0].fd = fd;
+	fds[0].events = POLLPRI | POLLERR | POLLHUP | POLLNVAL;
 
 	while(1)
 	{
@@ -187,6 +201,7 @@ void *temperature_task()
 
 			else
 			{
+
 				led_off(1);
 				
 				float temperature_celcius = temp_read() * 0.0625;
@@ -204,13 +219,35 @@ void *temperature_task()
 				sprintf(buffer,"DEBUG T-low in celcius = %f", tlow_reg_read() * 0.0625);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-				/*setting temperature alert*/
-				int alert = config_read_alert();
+				// /*setting temperature alert*/
+				// int alert = config_read_alert();
 				
-				if(alert == 1)
-					led_off(2);
+				// if(alert == 1)
+				// 	led_off(2);
+				// else
+				// 	led_on(2);
+
+				int ret = poll(fds,1,timeout);
+				char buffer_poll[2];
+
+				
+				if(ret > 0)
+				{
+					memset(buffer_poll,'\0',2);
+				
+					lseek(fds[0].fd,0, SEEK_SET);
+					read(fds[0].fd, buffer_poll, 2);
+
+					if(fds[0].revents & POLLPRI)
+					{
+						printf("\n\n\n VALUE CHANGED \n\n\n");
+						led_on(2);
+					}
+				}
 				else
-					led_on(2);
+				{
+					led_off(2);
+				}
 			}
 
 			/*clearing the flag which will be set when the timer of temperature will be triggered*/			
@@ -516,15 +553,9 @@ int startup_test()
 	/*returns error code for any failure in POST*/
 	if(temp_dead_flag || lux_dead_flag || remote_socket_dead_flag || logger_dead_flag)
 	{
-		// memset(buffer,'\0',MAX_BUFFER_SIZE);
-		// sprintf(buffer,"ERROR Start up test failed");
-		// mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 		return ERROR;
 	}
 	
-	// memset(buffer,'\0',MAX_BUFFER_SIZE);
-	// sprintf(buffer,"INFO Start up test Passed");
-	// mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 	return SUCCESS;
 }
@@ -576,7 +607,7 @@ int main(int argc, char *argv[])
 	/*creating the looger file*/
 	logger_init(file_name);
 
-	for(i=0; i<3; i++)
+	for(i=0; i<4; i++)
 	{
 		gpio_pin_init(i);
 		led_off(i);
