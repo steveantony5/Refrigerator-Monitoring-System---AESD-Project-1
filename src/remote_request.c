@@ -246,7 +246,9 @@ void *remote_request_callback(void *arg)
                     sprintf(buffer,"Invalid remote request\n");
                     send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
                 }  
-            } 
+            }
+            close(new_socket);
+            exit(0); 
         }
     }   
 }   
