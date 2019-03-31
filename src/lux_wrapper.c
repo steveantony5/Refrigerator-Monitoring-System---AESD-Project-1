@@ -59,7 +59,9 @@ int lux_sensor_setup()
 
 	/*Writing to control register*/
 	register_data = 0x03;
-	ret_status =  byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+
 	if(ret_status == ERROR)
 	{
 		perror("Error on CONTROL_REGISTER of  lux sensor");
