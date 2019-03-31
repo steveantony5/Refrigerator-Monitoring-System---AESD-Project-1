@@ -122,13 +122,6 @@ void *temperature_task()
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
-<<<<<<< HEAD
-				// printf("Temperatue in celcius = %f\n", temperature_celcius);
-				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
-=======
-				printf("Temperatue in celcius = %f\n", temperature_celcius);
->>>>>>> 0a6f00efd41709f756238625671b44c28b951e5f
-
 				memset(buffer,0,MAX_BUFFER_SIZE);
 				sprintf(buffer,"T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
 				//printf("T-high in celcius = %f\n", thigh_reg_read() * 0.0625);
@@ -259,13 +252,9 @@ void *lux_task()
 
 			}
 
-<<<<<<< HEAD
-			// printf("CH0 %d\n",CH0);
-=======
 			#ifdef DEBUG
 			printf("CH0 %d\n",CH0);
->>>>>>> 0a6f00efd41709f756238625671b44c28b951e5f
-			//printf("CH1 %d\n",CH1);
+
 			#endif
 
 			/*clearing the flag which will be set when the timer of lux will be triggered*/
@@ -282,17 +271,11 @@ void beat_timer_handler(union sigval val)
 {
 	char buffer[MAX_BUFFER_SIZE];
 
-<<<<<<< HEAD
-	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
-	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
-	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
-=======
 	#ifdef DEBUG
 	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
 	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
 	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
 	#endif
->>>>>>> 0a6f00efd41709f756238625671b44c28b951e5f
 
 	/*Check liveliness of temperature thread*/
 	if(Pulse_temp <= Pulse_temp_prev)
