@@ -320,7 +320,7 @@ int thigh_reg_read()
 	if(ret_val == ERROR)
 	{
 		perror("Error on reading TLOW REGISTER");
-		return ERROR;
+		return TEMP_ERROR;
 	}
 
 	higherByte = readBytes[0];
@@ -351,7 +351,7 @@ int temp_read()
 	if(ret_val == ERROR)
 	{
 		perror("Error on reading TEMPERATURE REGISTER");
-		return ERROR;
+		return TEMP_ERROR;
 	}
 
 	higherByte = readBytes[0];
@@ -373,15 +373,27 @@ int temp_read()
 
 float temp_in_celcius()
 {
-	return (temp_read() * 0.0625);
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return (temperature * 0.0625);
 }
 
 float temp_in_kelvin()
 {
-	return ((temp_read() * 0.0625) + 273.15);
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return ((temperature * 0.0625) + 273.15);
 }
 
 float temp_in_fahrenheit()
 {
-	return (((temp_read() * 0.0625) * (9/5)) + 32);
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return (((temperature * 0.0625) * (9/5)) + 32);
 }

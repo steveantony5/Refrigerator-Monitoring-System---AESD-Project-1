@@ -162,7 +162,7 @@ void *temperature_task()
 
 
 			/*reading the data register*/
-			if(temp_read() == ERROR)
+			if(temp_read() == TEMP_ERROR)
 			{
 				// led_on();
 				// printf("LED ON TEMP\n");
@@ -179,6 +179,7 @@ void *temperature_task()
 				float temperature_celcius = temp_read() * 0.0625;
 				memset(buffer,'\0',MAX_BUFFER_SIZE);
 				sprintf(buffer,"INFO Temperatue in celcius = %f", temperature_celcius);
+				printf("Temperatue in celcius = %f\n", temperature_celcius);
 				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
@@ -307,7 +308,7 @@ void *lux_task()
 
 				/*measuring lux value*/
 				lux = lux_measurement(CH0,CH1);
-				// printf("lux %f\n",lux);
+				printf("lux %f\n",lux);
 
 				/*checks if a transition occured from dark to bright
 				 or bright to dark
@@ -345,10 +346,10 @@ void *lux_task()
 
 			}
 
-			#ifdef DEBUG
-			printf("CH0 %d\n",CH0);
+			// #ifdef DEBUG
+			// printf("CH0 %d\n",CH0);
 
-			#endif
+			// #endif
 
 			/*clearing the flag which will be set when the timer of lux will be triggered*/
         	FLAG_READ_LUX = 0;
@@ -426,14 +427,14 @@ int startup_test()
 
 	/*Checks the temperature sensor power on check*/ 
 	ret_val = temp_sensor_init();
-	if(ret_val != 0)
+	if(ret_val == ERROR)
 	{
 		perror("Satrup test temperature init failed");
 		temp_dead_flag = 1;
 	}
 
 	ret_val = (int)temp_in_celcius();
-	if(ret_val <-40 && ret_val > 128)
+	if(ret_val <-40 || ret_val > 128)
 	{
 		perror("Sartup temperature value test failed");
 		temp_dead_flag = 1;

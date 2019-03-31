@@ -122,7 +122,7 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
          		printf("tempc Request sent to remote request\n");
                 float tempc = temp_in_celcius();
-                if((tempc != ERROR) && (temp_dead_flag != 1))
+                if((tempc != TEMP_ERROR) && (temp_dead_flag != 1))
                 {
                     sprintf(buffer,"Temperature in Celcius = %f\n",tempc);
                 }
@@ -140,7 +140,7 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("tempk Request sent to remote request\n");
                 float tempk = temp_in_kelvin();
-                if((tempk != ERROR) && (temp_dead_flag != 1))
+                if((tempk != TEMP_ERROR) && (temp_dead_flag != 1))
                 {
                     sprintf(buffer,"Temperature in Kelvin = %f\n",tempk);
                 }
@@ -158,7 +158,7 @@ void *remote_request_callback(void *arg)
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("tempf Request sent to remote request\n");
                 float tempf = temp_in_fahrenheit();
-                if((tempf != ERROR) && (temp_dead_flag != 1))
+                if((tempf != TEMP_ERROR) && (temp_dead_flag != 1))
                 {
                     sprintf(buffer,"Temperature in fahrenheit = %f\n",tempf);
                 }
@@ -195,12 +195,13 @@ void *remote_request_callback(void *arg)
             {
                 memset(buffer,'\0',MAX_BUFFER_SIZE);
                 printf("fridge state Request sent to remote request\n");
-                fridge_state = get_current_state_fridge(get_lux());
-                if((fridge_state == BRIGHT) && (lux_dead_flag != 1))
+                float lux = get_lux();
+                fridge_state = get_current_state_fridge(lux);
+                if((fridge_state == BRIGHT) && (lux_dead_flag != 1) && (lux != ERROR))
                 {
                     sprintf(buffer,"Fridge door is opened\n");
                 }
-                else if((fridge_state == DARK) && (lux_dead_flag != 1))
+                else if((fridge_state == DARK) && (lux_dead_flag != 1) && (lux != ERROR))
                 {
                     sprintf(buffer,"Fridge door is closed\n");
                 }

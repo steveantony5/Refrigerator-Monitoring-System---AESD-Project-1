@@ -10,8 +10,6 @@ int FLAG_LOG;
 
 const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
-const int user_select_log_level = 0;
-
 typedef enum log_level_enum{
     Nolog = -1,
     Debug = 0,
@@ -19,6 +17,10 @@ typedef enum log_level_enum{
     Warn,
     Error
 }log_level_enum;
+
+const int user_select_log_level = Debug;
+
+
 
 int fd3_w;
 
@@ -112,10 +114,6 @@ void *logger_thread_callback(void *arg)
 
             sscanf(buffer,"%s",logger_level);
 
-            #ifdef DEBUG
-            printf("Log level = %s\n", logger_level);
-            #endif
-            
             if(strcmp(logger_level, "ERROR") == 0)
                 received_log_level = Error;
             else if(strcmp(logger_level, "WARN") == 0)
