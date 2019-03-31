@@ -1,4 +1,15 @@
+/**
+ * @\file	led.c
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the definitions for the led 
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
 #include "led.h"
+
 
 int led_on()
 {
@@ -7,7 +18,7 @@ int led_on()
 	fputc('0', file_ptr);
 	fclose(file_ptr);	
 
-	return 0;
+	return SUCCESS;
 }
 
 int led_off()
@@ -17,7 +28,7 @@ int led_off()
 	fputc('1', file_ptr);
 	fclose(file_ptr);	
 
-	return 0;
+	return SUCCESS;
 }
 
 int gpio_pin_init()
@@ -32,21 +43,6 @@ int gpio_pin_init()
 	fprintf(file_ptr,"out");
 	fclose(file_ptr);
 
-	return 0;	
+	return SUCCESS;	
 
 }
-
-// int main()
-// {
-// 	gpio_pin_init();
-	
-// 	while(1)
-// 	{
-// 		led_on();
-// 		sleep(1);
-		
-// 		led_off();
-// 		sleep(1);	
-// 	}
-	
-// }

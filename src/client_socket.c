@@ -1,3 +1,14 @@
+/**
+ * @\file   client_socket.c
+ * @\author Sanju Prakash Kannioth
+ * @\brief  This files contains the definitions for the remote client request program
+ * @\date   03/30/2019
+ *
+ */
+/*****************************************************************
+                        Includes
+*****************************************************************/
+
 #include <stdio.h>
 #include <sys/socket.h>
 #include <unistd.h>
