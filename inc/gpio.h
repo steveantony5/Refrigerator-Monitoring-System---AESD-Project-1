@@ -79,4 +79,18 @@ gpio_pin_init
 */
 int gpio_pin_init(int8_t);
 
+/**
+--------------------------------------------------------------------------------------------
+gpio_interrupt_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the gpio Interrupt on BBG
+*
+* 	@\param			int8_t 		GPIO number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int gpio_interrupt_init(int8_t);
+
 #endif

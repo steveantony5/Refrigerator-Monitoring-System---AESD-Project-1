@@ -72,3 +72,30 @@ int gpio_pin_init(int8_t pin)
 	return SUCCESS;	
 
 }
+
+int gpio_interrupt_init(int8_t gpio_pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+
+	FILE *file_ptr = fopen("/sys/class/gpio/export", "w");
+	
+	fprintf(file_ptr,"%d", gpio_pin);
+	fclose(file_ptr);
+
+	/* Path to the specify GPIO as input */
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/direction");
+	file_ptr = fopen(gpio_path, "w+");
+
+	fprintf(file_ptr,"in");
+	fclose(file_ptr);
+
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/edge");
+	file_ptr = fopen(gpio_path, "w+");
+
+	fprintf(file_ptr,"both");
+	fclose(file_ptr);
+
+	return SUCCESS;
+}

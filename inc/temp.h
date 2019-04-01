@@ -42,6 +42,8 @@
 #define READ_EM_MODE (0x10)
 #define READ_ALERT	 (0x20)
 
+#define BBG_INTERRUPT (49)
+
 
 /*****************************************
  *             enums

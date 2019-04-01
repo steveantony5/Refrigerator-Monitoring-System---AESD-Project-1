@@ -1,13 +1,14 @@
-#ifndef POST_H
-#define POST_H
 
 /**
- * @\file	lux_wrapper.h
+ * @\file	POST.h
  * @\author	Sanju Prakash Kannioth
  * @\brief	This files contains the declarations and header files for the Power On Self Test 
  * @\date	03/30/2019
  *
  */
+#ifndef POST_H
+#define POST_H
+
 /*****************************************************************
 						Includes
 *****************************************************************/

@@ -1,6 +1,3 @@
-#ifndef REMOTE_REQUEST_H
-#define REMOTE_REQUEST_H
-
 /**
  * @\file	remote_request.h
  * @\author	Sanju Prakash Kannioth
@@ -8,6 +5,10 @@
  * @\date	03/30/2019
  *
  */
+
+#ifndef REMOTE_REQUEST_H
+#define REMOTE_REQUEST_H
+
 
 /*****************************************************************
 						Includes
@@ -65,6 +66,19 @@ remote_request_callback
 */
 void *remote_request_callback(void *);
 
+
+/**
+--------------------------------------------------------------------------------------------
+socket_creation_server
+--------------------------------------------------------------------------------------------
+*	This creates a server socket
+*
+* 	@\param		  	int 	port number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
 int socket_creation_server(int);
 
 
