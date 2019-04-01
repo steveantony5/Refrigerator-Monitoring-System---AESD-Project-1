@@ -1,0 +1,739 @@
+/*
+--------------------------------------------------------------------------------------------
+byte_access_lux_register
+--------------------------------------------------------------------------------------------
+*	This function helps to write/read in the lux registers as byte
+*
+* 	@\param			i2c file descriptor\
+*                   address of the register where it has to be read/written
+*                   mode - read - 0/ write - 1/ command - 2(MACROS defined for these)
+*                   register data pointer - where data to be stored for read mode
+*											this data will be written in write mode
+*                   flags - here any flag that has to be included in command registers can be passe
+*                           eg: flag for clearing interrupts 
+*                   
+*
+* 	@\return		error status
+*
+*/
+int byte_access_lux_register(int , uint8_t ,int  , uint8_t *, uint8_t );
+
+
+
+/*
+--------------------------------------------------------------------------------------------
+lux_sensor_setup
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function to set up the lux sensor and its registers
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int lux_sensor_setup();
+
+
+
+/*
+--------------------------------------------------------------------------------------------
+read_channel_0
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that reads CH0 of the lux sensor
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int read_channel_0();
+
+/*
+--------------------------------------------------------------------------------------------
+read_channel_1
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that reads CH1 of the lux sensor
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int read_channel_1();
+
+/*
+--------------------------------------------------------------------------------------------
+lux_measurement
+--------------------------------------------------------------------------------------------
+*	This function measures lux value based on CH0 and CH1
+*
+* 	@\param			Ch0, CH1
+*
+* 	@\return		lux value
+*
+*/
+float lux_measurement(float , float );
+
+/*
+--------------------------------------------------------------------------------------------
+has_state_transition_occurred
+--------------------------------------------------------------------------------------------
+*	This function identifies whether a transition has occured from bright to dark or dark to bright
+*
+* 	@\param			lux
+*
+* 	@\return		none
+*
+*/
+void has_state_transition_occurred(float );
+
+/*
+--------------------------------------------------------------------------------------------
+get_lux
+--------------------------------------------------------------------------------------------
+*	This is a wrapper for lux sensor measurement for remote request task
+*   This includes read_channel_0(), read_channel_1(), lux_measurement(float , float )
+*
+* 	@\param			none
+*
+* 	@\return		lux value
+*
+*/
+float get_lux();
+
+/*
+--------------------------------------------------------------------------------------------
+get_current_state_fridge
+--------------------------------------------------------------------------------------------
+*	This gets the current staus of the fridge door whether it is opened or closed
+*
+* 	@\param			lux value
+*
+* 	@\return		door status 
+*
+*/
+enum Status get_current_state_fridge(float);
+
+/*
+--------------------------------------------------------------------------------------------
+indication_register
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that gets the part number and revision number of the sensor 
+*   which is used in start up test
+*
+* 	@\param			lux value
+*
+* 	@\return		error code 
+*
+*/
+int indication_register();
+
+/*
+--------------------------------------------------------------------------------------------
+kick_timer
+--------------------------------------------------------------------------------------------
+*	This helps in restarting the timer after expiration
+*
+* 	@\param			timer descriptor, timer expiration time in ns
+*
+* 	@\return		error status
+*
+*/
+int kick_timer(timer_t, int);
+
+/*
+--------------------------------------------------------------------------------------------
+setup_timer_POSIX
+--------------------------------------------------------------------------------------------
+*	This helps in creating the timer
+*
+* 	@\param			timer descriptor, timer handler function
+*
+* 	@\return		error status
+*
+*/
+int setup_timer_POSIX(timer_t *,void (*handler)(union sigval));
+
+/*
+--------------------------------------------------------------------------------------------
+stop_timer
+--------------------------------------------------------------------------------------------
+*	This helps in deleting the timer
+*
+* 	@\param			timer descriptor
+*
+* 	@\return		error status
+*
+*/
+int stop_timer(timer_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_sensor_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the temperature sensor
+*
+* 	@\param			
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int temp_sensor_init();
+
+/**
+--------------------------------------------------------------------------------------------
+pointer_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will point to the register that needs to be writen/read
+*
+* 	@\param			 
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int pointer_reg_write(pointer_reg reg);
+
+/**
+--------------------------------------------------------------------------------------------
+tlow_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the tlow register
+*
+* 	@\param			
+*
+* 	@\return		tlow configured temperature
+*
+*/
+int tlow_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+thigh_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the thigh register
+*
+* 	@\param			
+*
+* 	@\return		thigh configured temperature
+*
+*/
+int thigh_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_read
+--------------------------------------------------------------------------------------------
+*	This function will read the temperature data register
+*
+* 	@\param			
+*
+* 	@\return		raw temperature value from sensor
+*
+*/
+int temp_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_celcius
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in celcius
+*
+* 	@\param			
+*
+* 	@\return		temperature in celcius
+*
+*/
+float temp_in_celcius();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_kelvin
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in kelvin
+*
+* 	@\param			
+*
+* 	@\return		temperature in kelvin
+*
+*/
+float temp_in_kelvin();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_fahrenheit
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in fahrenheit
+*
+* 	@\param			
+*
+* 	@\return		temperature in fahrenheit
+*
+*/
+float temp_in_fahrenheit();
+
+/**
+--------------------------------------------------------------------------------------------
+tlow_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will write the tlow register
+*
+* 	@\param			temp_in_C  temperature in celcius
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int tlow_reg_write(uint8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+thigh_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will write the thigh register
+*
+* 	@\param			temp_in_C  temperature in celcius
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int thigh_reg_write(uint8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_reg_write_default
+--------------------------------------------------------------------------------------------
+*	This function will write the default values to the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_reg_write_default();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_sd_continuous
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the shutdown bit in the configuration register. 
+*	Allows conitunous conversion.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_sd_continuous();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_sd
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the shutdown bit in the configuration register.
+*	Disables continuous conversion.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_sd();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_low
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_low();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_high
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_high();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_comparator
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_comparator();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_interrupt
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_interrupt();
+
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_1
+--------------------------------------------------------------------------------------------
+*	This function will write 00 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_1();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_2
+--------------------------------------------------------------------------------------------
+*	This function will write 01 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_2();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_4
+--------------------------------------------------------------------------------------------
+*	This function will write 10 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_4();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_6
+--------------------------------------------------------------------------------------------
+*	This function will write 11 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_6();
+
+/**
+--------------------------------------------------------------------------------------------
+config_em_normal
+--------------------------------------------------------------------------------------------
+*	This function will write to the em bit in the configuration register.
+*	Enables 12 bit mode.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_em_normal();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_em_extended
+--------------------------------------------------------------------------------------------
+*	This function will write to the em bit in the configuration register.
+*	Enables 13 bit mode.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_em_extended();
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_0_25HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 0.25hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_0_25HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_1HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 1hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_1HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_4HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 4hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_4HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_8HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 8hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_8HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_em
+--------------------------------------------------------------------------------------------
+*	This function will read the mode of operation from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_em();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_fault_bits
+--------------------------------------------------------------------------------------------
+*	This function will read the fault queue from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_fault_bits();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_conversion_rate
+--------------------------------------------------------------------------------------------
+*	This function will read the conversion rate from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_conversion_rate();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_alert
+--------------------------------------------------------------------------------------------
+*	This function will read the alert bit from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_alert();
+/*
+--------------------------------------------------------------------------------------------
+socket_creation_client
+--------------------------------------------------------------------------------------------
+*	This helps in restarting the timer after expiration
+*
+* 	@\param			port number of server, IP address
+*
+* 	@\return		error status
+*
+*/int socket_creation_client(int port,char ip[20]);
+
+
+/**
+--------------------------------------------------------------------------------------------
+i2c_setup
+--------------------------------------------------------------------------------------------
+*	This function helps in setting up the i2c bus for the slave
+*
+* 	@\param		i2c file descriptor, bus number, slave address in hexa
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int i2c_setup(int * , int ,int );
+/**
+--------------------------------------------------------------------------------------------
+led_off
+--------------------------------------------------------------------------------------------
+*	This function will turn the user specified USR LED OFF
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int led_off(int8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+gpio_pin_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the user specified USR LED
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int gpio_pin_init(int8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+time_stamp
+--------------------------------------------------------------------------------------------
+*	This function will format the timestamp
+*
+* 	@\param			
+*
+* 	@\return		timestamp as a string
+*
+*/
+char *time_stamp();
+
+
+/**
+--------------------------------------------------------------------------------------------
+logger_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the logger
+*
+* 	@\param			char *		filepath
+*
+* 	@\return		void
+*
+*/
+void logger_init(char *);
+
+
+/**
+--------------------------------------------------------------------------------------------
+logger_thread_callback
+--------------------------------------------------------------------------------------------
+*	This function is the thread callback function for the logger
+*
+* 	@\param			void *		filename and path
+*
+* 	@\return		void
+*
+*/
+void *logger_thread_callback(void *);

@@ -48,5 +48,14 @@ Further, an LED glows to indicate that particular sensor is non operational
 	- LED 0 - Light sensor  
 	- LED 1 - Temperature sensor  
 
-#unit testing
-Unit testing has been performed for Lux sensor module, Temperature sensor module and Logger module  
+## unit testing  
+Unit testing has been performed for Lux sensor module, Temperature sensor module and Logger module    
+
+
+# Folder Structure
+**SRC**  
+	- contains all the source files  
+**INC**  
+	- contains all the include files  
+**unit**   
+	- contains the unit test file  
