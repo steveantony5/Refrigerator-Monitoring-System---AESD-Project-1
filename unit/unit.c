@@ -1,3 +1,14 @@
+/**
+ * @\file	unit.c
+ * @\author	Steve Antony X
+ * @\brief	This files performs unit testing for Lux, Temperature and Logger module
+ * @\date	03/31/2019
+ *
+ */
+
+/*****************************************************************
+						Includes
+*****************************************************************/
 #include "lux_wrapper.h"
 #include "lux.h"
 #include "temp.h"
@@ -7,20 +18,25 @@
 #include "led.h"
 #include "logger.h"
 
-#define MAX_BUFFER_SIZE 100
-
+/*****************************************************************
+						Globals
+*****************************************************************/
 int file_des_lux;
 uint8_t register_data;
 int ret_status;
 
+/*****************************************************************
+						Unit test for Lux
+*****************************************************************/
 int unit_lux()
 {
 	printf("Begin lux sensor test\n");
 
 
-	i2c_setup(&file_des_lux,2,0x39);
+	ret_status = i2c_setup(&file_des_lux,2,0x39);
+	assert(ret_status == SUCCESS);
 
-	/*CONTROL_REGISTER*/
+	/*********************CONTROL_REGISTER*********************************/
 	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);
 
@@ -37,7 +53,7 @@ int unit_lux()
 	printf("REGISTER DATA after write%x\n",register_data );
 	assert(register_data ==  0x33);//reserved set as 3
 	
-	/******************************************************/
+	/*************************TIMING_REGISTER*****************************/
 	ret_status =  byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -54,7 +70,7 @@ int unit_lux()
 	assert(register_data ==  0x02);
 
 
-	/******************************************************/
+	/***********************INTERRUPT Register*******************************/
 	ret_status =  byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -72,7 +88,7 @@ int unit_lux()
 	assert(register_data ==  0x11);
 
 	
-	/******************************************************/
+	/***********************INDICATION_REGISTER*******************************/
 
 	ret_status =  byte_access_lux_register(file_des_lux, INDICATION_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
@@ -84,7 +100,7 @@ int unit_lux()
 	assert(ret_status == SUCCESS);
 
 	
-	/******************************************************/
+	/**********************DATA0LOW_REGISTER********************************/
 	ret_status =  byte_access_lux_register(file_des_lux, DATA0LOW_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -95,7 +111,7 @@ int unit_lux()
 	assert(ret_status == SUCCESS);
 
 	
-	/******************************************************/
+	/**********************DATA0HIGH_REGISTER********************************/
 	ret_status =  byte_access_lux_register(file_des_lux, DATA0HIGH_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -106,7 +122,7 @@ int unit_lux()
 	assert(ret_status == SUCCESS);
 
 	
-	/******************************************************/
+	/********************DATA1LOW_REGISTER**********************************/
 	ret_status =  byte_access_lux_register(file_des_lux, DATA1LOW_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -117,7 +133,7 @@ int unit_lux()
 	assert(ret_status == SUCCESS);
 
 	
-	/******************************************************/
+	/********************DATA1HIGH_REGISTER**********************************/
 	ret_status =  byte_access_lux_register(file_des_lux, DATA1HIGH_REGISTER,COMMAND , &register_data, NONE );
 	assert(ret_status == SUCCESS);	
 	
@@ -128,53 +144,88 @@ int unit_lux()
 	assert(ret_status == SUCCESS);
 
 	
+	/********************THRESHHIGHLOW**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0xB8; //set to 3000
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	printf("REGISTER DATA - THRESHHIGHLOW %x\n",register_data );
+	assert(register_data == 0xB8);
+
+	/***********************THRESHHIGHHIGH*******************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0xBB; //set to 3000
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	printf("REGISTER DATA - THRESHHIGHHIGH %x\n",register_data );
+	assert(register_data == 0xBB);
+	/********************THRESHLOWLOW**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0x01; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	printf("REGISTER DATA - THRESHLOWLOW %x\n",register_data );
+	assert(register_data == 0x01);
+
+	/********************THRESHLOWHIGH**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0x01; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	printf("REGISTER DATA - THRESHLOWLOW %x\n",register_data );
+	assert(register_data == 0x01);
+
+
 	/******************************************************/
-	uint16_t word;
-	/*command to write as a word for high threshold register */
-	ret_status = word_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	/*Writing to threshold register*/
-	word = 0x0BB8; //set to 3000
-	ret_status = word_access_lux_register(file_des_lux, NONE,WRITE , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	ret_status = word_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	/*Writing to threshold register*/
-	ret_status = word_access_lux_register(file_des_lux, NONE,READ , &word, NONE );
-	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHHIGHLOW %x\n",word );
-	assert(word == 0x0BB8);
-	/******************************************************/
-	/*command to write as a word for high threshold register */
-	ret_status = word_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	/*Writing to threshold register*/
-	word = 0x0101; //set to 3000
-	ret_status = word_access_lux_register(file_des_lux, NONE,WRITE , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	ret_status = word_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &word, NONE );
-	assert(ret_status == SUCCESS);
-
-	/*Writing to threshold register*/
-	ret_status = word_access_lux_register(file_des_lux, NONE,READ , &word, NONE );
-	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHLOWLOW %x\n",word );
-	assert(word == 0x0101);
-
-
-
 
 	printf("Ending lux sensor test\n");
 	return SUCCESS;
 
 }
 
-
+/*****************************************************************
+				Unit test for Temperature module
+*****************************************************************/
 int unit_temp()
 {
 	printf("Begin temperature sensor test\n");
@@ -289,6 +340,9 @@ int unit_temp()
 
 }
 
+/*****************************************************************
+					Unit test for Logger
+*****************************************************************/
 int unit_logger(char *file_name)
 {
 	printf("Begin logger test\n");
@@ -313,6 +367,9 @@ int unit_logger(char *file_name)
 	return SUCCESS;
 }	
 
+/*****************************************************************
+					Main program for unit testing
+*****************************************************************/
 int main(int argc, char *argv[])
 {
 	if(argc < 3)
@@ -343,5 +400,5 @@ int main(int argc, char *argv[])
 
 
 
-	return 0;
+	return SUCCESS;
 }

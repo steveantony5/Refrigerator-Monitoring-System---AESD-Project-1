@@ -59,7 +59,7 @@ extern pthread_mutex_t lock_res;
 --------------------------------------------------------------------------------------------
 lux_sensor_setup
 --------------------------------------------------------------------------------------------
-*	This function is to set up the lux sensor and its registers
+*	This is a wrapper function to set up the lux sensor and its registers
 *
 * 	@\param			none
 *
@@ -72,7 +72,7 @@ int lux_sensor_setup();
 --------------------------------------------------------------------------------------------
 read_channel_0
 --------------------------------------------------------------------------------------------
-*	This function reads CH0 of the lux sensor
+*	This is a wrapper function that reads CH0 of the lux sensor
 *
 * 	@\param			none
 *
@@ -85,7 +85,7 @@ int read_channel_0();
 --------------------------------------------------------------------------------------------
 read_channel_1
 --------------------------------------------------------------------------------------------
-*	This function reads CH1 of the lux sensor
+*	This is a wrapper function that reads CH1 of the lux sensor
 *
 * 	@\param			none
 *
@@ -151,7 +151,8 @@ enum Status get_current_state_fridge(float);
 --------------------------------------------------------------------------------------------
 indication_register
 --------------------------------------------------------------------------------------------
-*	This gets the part number and revision number of the sensor which is used in start up test
+*	This is a wrapper function that gets the part number and revision number of the sensor 
+*   which is used in start up test
 *
 * 	@\param			lux value
 *

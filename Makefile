@@ -16,30 +16,30 @@ CLIENT_FLAGS = -Wall -Werror
 
 LOG_FOLDER = ./log_folder
 
+# For Building Application in Linux
 all: $(OBJ)
 	$(CC) -o $(OP) $(OBJ) $(CFLAGS) 
 
+# For Building Remote client in Linux
 client: $(CLIENT_OBJ)
 	$(CC) $(CLIENT_OBJ) $(INCLUDES)  $(CLIENT_FLAGS) -o $(CLIENT_OP)
 
+# For Building Application in BBG
 bbg:
 	arm-linux-gcc -o main src/i2c.c src/heartbeat.c src/logger.c src/POSIX_timer.c src/lux.c src/temp.c src/led.c src/remote_request.c src/lux_wrapper.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
+# For Building Application in BBG
 bbg_remote_api:
 	arm-linux-gcc -o remote_api src/client_socket.c -Wall -Werror
 
-unit_test:
-	arm-linux-gcc -o test unit/unit.c -Wall -Werror
-
+# For Building Unit test in Linux
 test_linux:
+	gcc -o test unit/unit.c  src/led.c src/logger.c src/heartbeat.c src/remote_request.c src/POSIX_timer.c src/i2c.c src/lux.c src/temp.c src/lux_wrapper.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
+
+# For Building Unit test in BBG
+test_bbg:
 	arm-linux-gcc -o test unit/unit.c  src/led.c src/logger.c src/heartbeat.c src/remote_request.c src/POSIX_timer.c src/i2c.c src/lux.c src/temp.c src/lux_wrapper.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
-
-test_temp:
-	arm-linux-gcc -o temperature_unit unit/temperature_unit.c src/led.c src/i2c.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 clean:
 	rm -f *.o main remote_api client_socket test
 	rm -rf $(LOG_FOLDER)
-
-uclean:
-	rm -f test

@@ -4,7 +4,7 @@
 #define DEBUG 1
 
 
-#define NO_UNIT_TEST 1
+#define NO_UNIT_TEST 0
 
 #define MAX_SOURCE_SIZE 40
 

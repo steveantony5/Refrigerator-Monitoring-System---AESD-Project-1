@@ -46,6 +46,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
+	/**********************************/
 	/*command to write on control register*/
 	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
 	if(ret_status == ERROR)
@@ -63,6 +64,7 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 
+	/**********************************/
 	/*command to write on TIMING_REGISTER*/
 	ret_status = byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
@@ -80,8 +82,10 @@ int lux_sensor_setup()
 		return ERROR;
 	}
 	
+	/**********************************/
 	/*command to write as a word for high threshold register */
-	ret_status = word_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data_word, NONE );
+	/*upper threshold is set to 3000*/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on THRESHHIGHLOW of lux sensor");
@@ -89,14 +93,32 @@ int lux_sensor_setup()
 	}
 
 	/*Writing to threshold register*/
-	register_data_word = 0x0BB8; //set to 3000
-	ret_status = word_access_lux_register(file_des_lux, NONE,WRITE , &register_data_word, NONE );
+	register_data = 0xB8; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	if(ret_status == ERROR)
 	{
 		perror("Error on THRESHHIGHLOW of lux sensor");
 		return ERROR;
 	}
 
+	/**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHHIGH of lux sensor");
+		return ERROR;
+	}
+
+	/*Writing to threshold register*/
+	register_data = 0xBB; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHHIGH of lux sensor");
+		return ERROR;
+	}
+
+	/**********************************/
 	/*command to write for INTERRUPT register */
 	ret_status = byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
 	if(ret_status == ERROR)
