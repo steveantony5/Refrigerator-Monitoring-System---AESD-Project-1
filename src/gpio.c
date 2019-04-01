@@ -1,14 +1,14 @@
 /**
- * @\file	led.c
+ * @\file	gpio.c
  * @\author	Sanju Prakash Kannioth
- * @\brief	This files contains the definitions for the led 
+ * @\brief	This files contains the definitions for the gpio pins 
  * @\date	03/30/2019
  *
  */
 /*****************************************************************
 						Includes
 *****************************************************************/
-#include "led.h"
+#include "gpio.h"
 
 
 int led_on(int8_t pin)

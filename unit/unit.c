@@ -15,7 +15,7 @@
 #include <assert.h>
 #include "common.h"
 #include <stdio.h>
-#include "led.h"
+#include "gpio.h"
 #include "logger.h"
 
 /*****************************************************************

@@ -1,13 +1,13 @@
 /**
- * @\file	led.h
+ * @\file	gpio.h
  * @\author	Sanju Prakash Kannioth
- * @\brief	This files contains the declarations and header files for the led 
+ * @\brief	This files contains the declarations and header files for the gpio pins 
  * @\date	03/30/2019
  *
  */
 
-#ifndef LED_H
-#define LED_H
+#ifndef GPIO_H
+#define GPIO_H
 
 
 /*****************************************************************

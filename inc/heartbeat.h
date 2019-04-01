@@ -17,7 +17,7 @@
 #include "lux_wrapper.h"
 #include "temp.h"
 #include "i2c.h"
-#include "led.h"
+#include "gpio.h"
 #include "remote_request.h"
 #include "common.h"
 #include "POST.h"
