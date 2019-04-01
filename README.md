@@ -19,7 +19,7 @@ This is implemented as a thread which helps to log message to a file
 	- The looger task supports four log levels  
 		- DEBUG, INFO, WARN, ERROR (increasing order of severity)  
 	- Further, it **enables the logger level above which the log messages should be logged**  
-		eg: if the logger level is choosen as WARN, all log messages above or equal to WARN level will be logged  
+		eg: if the logger level is choosen as WARN, all log messages above or equal to WARN level will be logged   
 	
 ## Remote Request Thread
 This is implemented as a thread which reponds to requests from outside and is implemented using TCP sockets  
@@ -48,7 +48,7 @@ Further, an LED glows to indicate that particular sensor is non operational
 	- LED 0 - Light sensor  
 	- LED 1 - Temperature sensor  
 
-## unit testing  
+## Unit Testing on BB  
 Unit testing has been performed for Lux sensor module, Temperature sensor module and Logger module    
 
 
@@ -58,4 +58,16 @@ Unit testing has been performed for Lux sensor module, Temperature sensor module
 **INC**  
 	- contains all the include files  
 **unit**   
-	- contains the unit test file  
+	- contains the unit test file
+
+# How to execute the application?  
+**To make the executable for application on BB** 
+	-- enable the macro NO_UNIT_TEST in common.h   
+	-- make bbg  
+**To make the executable for unit testing on BB**  
+	-- disable the macro NO_UNIT_TEST in common.h
+	-- make test_bbg  
+**To clean up the executables**  
+	-- make clean  
+Note:  
+	To view debug messages on terminal, enable the macro DEBUG in common.h
