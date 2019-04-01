@@ -18,6 +18,7 @@ int led_on(int8_t pin)
 
 	gpio_pin = USR_LED_BASE + pin;
 
+	/* Path to the specific USR LED file system */
 	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
 	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
 
@@ -36,6 +37,7 @@ int led_off(int8_t pin)
 
 	gpio_pin = USR_LED_BASE + pin;
 
+	/* Path to the specific USR LED file system */
 	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
 	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
 
@@ -59,6 +61,7 @@ int gpio_pin_init(int8_t pin)
 	fprintf(file_ptr,"%d", gpio_pin);
 	fclose(file_ptr);
 
+	/* Path to the specify USR LED as output */
 	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
 	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/direction");
 	file_ptr = fopen(gpio_path, "w+");

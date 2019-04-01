@@ -8,9 +8,13 @@
 timer_t timer_id_log;
 int FLAG_LOG;
 
-
+/*****************************************************************
+                             Globals
+*****************************************************************/
 const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
+
+ /* Logger level enum */
 typedef enum log_level_enum{
     Nolog = -1,
     Debug = 0,
@@ -19,16 +23,16 @@ typedef enum log_level_enum{
     Error
 }log_level_enum;
 
-const int user_select_log_level = Debug;
+const int user_select_log_level = Debug; // User define log level
 
+int fd3_w; // FIFO descriptor
 
-
-int fd3_w;
-
-pthread_mutex_t lock;
+pthread_mutex_t lock; // Lock for message queue
 
 char time_stam[30];
 
+
+/* Function to format the time stamp */
 char *time_stamp()
 {
 	
@@ -39,7 +43,7 @@ char *time_stamp()
 	return time_stam;	
 }
 
-
+/* Function to initialize the logger */
 void logger_init(char *file_path)
 {
 	FILE *file_ptr;
@@ -55,6 +59,7 @@ void logger_init(char *file_path)
 
     struct mq_attr mq_attributes;
 
+    /* Setting the message queue attributes */
     mq_attributes.mq_flags = 0;
     mq_attributes.mq_maxmsg = 100;
     mq_attributes.mq_msgsize = MAX_BUFFER_SIZE;
@@ -63,6 +68,7 @@ void logger_init(char *file_path)
     msg_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR | O_NONBLOCK, 0666, &mq_attributes);
 }
 
+/* Thread callback function for logger */
 void *logger_thread_callback(void *arg)
 {
 	
@@ -91,7 +97,7 @@ void *logger_thread_callback(void *arg)
         pthread_cancel(logger_thread); 
     }
 
-    
+    /* Opening a FIFO to write logger heartbeat */    
     fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
    	if(fd3_w == ERROR)
     {
@@ -112,12 +118,14 @@ void *logger_thread_callback(void *arg)
             FLAG_LOG = 0;
         }
 
+        /* Check if message is received in message queue */
 	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0) > 0)
 	    {
 			pthread_mutex_lock(&lock);
 
             sscanf(buffer,"%s",logger_level);
 
+            /* Check user specified log level */
             if(strcmp(logger_level, "ERROR") == 0)
                 received_log_level = Error;
             else if(strcmp(logger_level, "WARN") == 0)

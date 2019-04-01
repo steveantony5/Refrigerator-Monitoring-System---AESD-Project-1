@@ -1,7 +1,3 @@
-#ifndef LED_H
-#define LED_H
-
-
 /**
  * @\file	led.h
  * @\author	Sanju Prakash Kannioth
@@ -9,6 +5,11 @@
  * @\date	03/30/2019
  *
  */
+
+#ifndef LED_H
+#define LED_H
+
+
 /*****************************************************************
 						Includes
 *****************************************************************/
@@ -26,16 +27,56 @@
 						     Macros
 *****************************************************************/
 
-#define USR_LED_BASE 53
+#define USR_LED_BASE 53 // Pin for 1st USR LED on BBG
 #define MAX_BUFFER_SIZE 200
 
 /*****************************************************************
 						Function prototypes
 *****************************************************************/
+
+
+/**
+--------------------------------------------------------------------------------------------
+led_on
+--------------------------------------------------------------------------------------------
+*	This function will turn the user specified USR LED ON
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
 int led_on(int8_t);
 
+
+/**
+--------------------------------------------------------------------------------------------
+led_off
+--------------------------------------------------------------------------------------------
+*	This function will turn the user specified USR LED OFF
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
 int led_off(int8_t);
 
+
+/**
+--------------------------------------------------------------------------------------------
+gpio_pin_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the user specified USR LED
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
 int gpio_pin_init(int8_t);
 
 #endif
