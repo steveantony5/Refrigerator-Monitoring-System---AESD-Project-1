@@ -27,7 +27,7 @@
 *****************************************************************/
 
 #define USR_LED_BASE 53
-#define MAX_BUFFER_SIZE 100
+#define MAX_BUFFER_SIZE 200
 
 /*****************************************************************
 						Function prototypes

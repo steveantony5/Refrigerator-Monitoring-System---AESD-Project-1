@@ -29,7 +29,7 @@
 
 
 #define QUEUE_NAME "/msg_queue"
-#define MAX_BUFFER_SIZE	100
+#define MAX_BUFFER_SIZE	200
 
 
 typedef struct
