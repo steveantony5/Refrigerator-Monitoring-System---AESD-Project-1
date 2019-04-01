@@ -316,6 +316,7 @@ void has_state_transition_occurred(float lux)
 		memset(buffer,0,MAX_BUFFER_SIZE);
 		sprintf(buffer,"State changed from Dark to Bright\n");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		led_on(3);
 
 	}
 	else if((lux < THRESHOLD_FOR_STATE_CHANGE) && (prev_lux > THRESHOLD_FOR_STATE_CHANGE))
@@ -324,17 +325,7 @@ void has_state_transition_occurred(float lux)
 		memset(buffer,0,MAX_BUFFER_SIZE);
 		sprintf(buffer,"State changed from Bright to Dark\n");
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
-
-		// //clearing the interrupt
-		// //command to write on control register  for Interupt register 
-		// register_data = CLEAR_PENDING_INTERUPTS | WRITE_COMMAND ;
-
-		// if (write(file_des_lux, &register_data, 1) == ERROR)
-		// {
-		// 	perror("Error on writing the control register\n");
-		// }
-
-
+		led_off(3);
 	}
 
 	prev_lux = lux;

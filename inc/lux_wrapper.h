@@ -21,6 +21,7 @@
 #include "i2c.h"
 #include "logger.h"
 #include "lux.h"
+#include "led.h"
 
 /*****************************************************************
 						MACROS

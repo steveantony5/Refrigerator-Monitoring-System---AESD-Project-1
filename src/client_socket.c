@@ -18,7 +18,7 @@
 #include <string.h>
 #include <time.h>
 
-#define PORT_NO 6000
+#define PORT_NO 6001
 #define LOOP_BACK_ADDR "127.0.0.1"
 #define MAX_BUFFER_SIZE 100
 

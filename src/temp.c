@@ -31,7 +31,7 @@ int config_reg_write_update(uint16_t bit_mask, bool clear)
 	uint8_t lowerByte = (uint8_t)writeConfig;
 
 
-	printf("writeConfig = %x\n", writeConfig);
+	// printf("writeConfig = %x\n", writeConfig);
 
 	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
 
@@ -118,7 +118,7 @@ int config_reg_read(uint16_t *configuration)
 
 	config = (readBytes[0] << 8 | readBytes[1]);
 
-	printf("CONFIG REG READ = %x\n", config);
+	// printf("CONFIG REG READ = %x\n", config);
 
 	*configuration = config;
 
