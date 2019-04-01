@@ -1,0 +1,4600 @@
+#ifndef LUX_WRAPPER_H_
+#define LUX_WRAPPER_H_
+
+
+/**
+ * @\file	lux_wrapper.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the declarations and header files for the lux sensor 
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <math.h>
+#include "i2c.h"
+#include "logger.h"
+#include "lux.h"
+#include "gpio.h"
+
+/*****************************************************************
+						MACROS
+*****************************************************************/
+#define CONTROL_REGISTER (0X00)
+#define TIMING_REGISTER (0X01)
+#define THRESHLOWLOW (0x02)
+#define THRESHLOWHIGH (0x03)
+#define THRESHHIGHLOW (0x04)
+#define THRESHHIGHHIGH (0x05)
+#define INTERRUPT (0x06)
+#define INDICATION_REGISTER (0x0A)
+#define DATA0LOW_REGISTER (0X0C)
+#define DATA0HIGH_REGISTER (0X0D)
+#define DATA1LOW_REGISTER (0X0E)
+#define DATA1HIGH_REGISTER (0X0F)
+
+#define CLEAR_PENDING_INTERUPTS (0x40)
+
+#define THRESHOLD_FOR_STATE_CHANGE (70)
+
+#define WRITE (1)
+#define COMMAND (2)
+#define READ (0)
+#define NONE (0)
+/*****************************************************************
+						Global declaration
+*****************************************************************/
+extern pthread_mutex_t lock_res;
+
+extern volatile int start_lux_thread ;
+
+extern pthread_t  lux_thread;
+
+extern int fd2_w; /*for dumping the heart beat to a pipe*/
+
+/*flags for start up tests*/
+extern int lux_thread_creation;
+
+extern int lux_dead_flag;
+
+/*****************************************************************
+						Function Protypes
+*****************************************************************/
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_lux
+--------------------------------------------------------------------------------------------
+*	This is signal handler for lux thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_lux(int num);
+
+/*
+--------------------------------------------------------------------------------------------
+lux_sensor_setup
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function to set up the lux sensor and its registers
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int lux_sensor_setup();
+
+/*
+--------------------------------------------------------------------------------------------
+lux_task
+--------------------------------------------------------------------------------------------
+*	This is the lux thread which will be spawned by the main task
+*
+* 	@\param			none
+*
+* 	@\return		none
+*
+*/
+void *lux_task();
+
+/*
+--------------------------------------------------------------------------------------------
+read_channel_0
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that reads CH0 of the lux sensor
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int read_channel_0();
+
+/*
+--------------------------------------------------------------------------------------------
+read_channel_1
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that reads CH1 of the lux sensor
+*
+* 	@\param			none
+*
+* 	@\return		error status
+*
+*/
+int read_channel_1();
+
+/*
+--------------------------------------------------------------------------------------------
+lux_measurement
+--------------------------------------------------------------------------------------------
+*	This function measures lux value based on CH0 and CH1
+*
+* 	@\param			Ch0, CH1
+*
+* 	@\return		lux value
+*
+*/
+float lux_measurement(float , float );
+
+/*
+--------------------------------------------------------------------------------------------
+has_state_transition_occurred
+--------------------------------------------------------------------------------------------
+*	This function identifies whether a transition has occured from bright to dark or dark to bright
+*
+* 	@\param			lux
+*
+* 	@\return		none
+*
+*/
+void has_state_transition_occurred(float );
+
+/*
+--------------------------------------------------------------------------------------------
+get_lux
+--------------------------------------------------------------------------------------------
+*	This is a wrapper for lux sensor measurement for remote request task
+*   This includes read_channel_0(), read_channel_1(), lux_measurement(float , float )
+*
+* 	@\param			none
+*
+* 	@\return		lux value
+*
+*/
+float get_lux();
+
+/*
+--------------------------------------------------------------------------------------------
+get_current_state_fridge
+--------------------------------------------------------------------------------------------
+*	This gets the current staus of the fridge door whether it is opened or closed
+*
+* 	@\param			lux value
+*
+* 	@\return		door status 
+*
+*/
+enum Status get_current_state_fridge(float);
+
+/*
+--------------------------------------------------------------------------------------------
+indication_register
+--------------------------------------------------------------------------------------------
+*	This is a wrapper function that gets the part number and revision number of the sensor 
+*   which is used in start up test
+*
+* 	@\param			lux value
+*
+* 	@\return		error code 
+*
+*/
+int indication_register();
+
+#endif
+/**
+ * @\file	POST.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the Power On Self Test 
+ * @\date	03/30/2019
+ *
+ */
+#ifndef POST_H
+#define POST_H
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "logger.h"
+#include "lux_wrapper.h"
+#include "temp.h"
+#include "i2c.h"
+#include "common.h"
+
+/*****************************************************************
+						Global decalarations
+*****************************************************************/
+extern int logger_thread_creation;
+extern int remote_socket_thread_creation;
+extern int temperature_thread_creation;
+extern int lux_thread_creation;
+
+extern int temp_dead_flag;
+extern int lux_dead_flag;
+extern int remote_socket_dead_flag;
+extern int logger_dead_flag;
+
+extern volatile int start_temp_thread;
+extern volatile int start_lux_thread;
+
+/*****************************************************************
+					Function Prototypes
+*****************************************************************/
+/*
+--------------------------------------------------------------------------------------------
+startup_test
+--------------------------------------------------------------------------------------------
+*	This contains the power on self test for temperature sensor and light sensor
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+int startup_test();
+
+#endif/**
+ * @\file	remote_request.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for remote request thread spawn
+ * @\date	03/30/2019
+ *
+ */
+
+#ifndef REMOTE_REQUEST_H
+#define REMOTE_REQUEST_H
+
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <string.h>
+#include <time.h>
+#include <errno.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+#include "lux_wrapper.h"
+#include "temp.h"
+#include "logger.h"
+#include "common.h"
+
+/*****************************************************************
+						Macros
+*****************************************************************/
+#define PORT_NO (6001)
+#define LISTEN_MAX (10)
+
+/*****************************************************************
+						Globals
+*****************************************************************/
+extern const char *log_level[10];
+
+pthread_t remote_request_thread;
+
+char message[MAX_BUFFER_SIZE];
+int new_socket, server_socket;
+
+extern int temp_dead_flag;
+extern int lux_dead_flag;
+
+/*****************************************************************
+						Function Protoypes
+*****************************************************************/
+/**
+--------------------------------------------------------------------------------------------
+remote_request_callback
+--------------------------------------------------------------------------------------------
+*	This is the thread for the remote request task
+*
+* 	@\param		  none
+*
+* 	@\return		none
+*
+*/
+void *remote_request_callback(void *);
+
+
+/**
+--------------------------------------------------------------------------------------------
+socket_creation_server
+--------------------------------------------------------------------------------------------
+*	This creates a server socket
+*
+* 	@\param		  	int 	port number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int socket_creation_server(int);
+
+
+#endif#ifndef COMMON_H
+#define COMMON_H
+
+/**
+ * @\file	common.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the variables to be included in all the files
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Macros
+*****************************************************************/
+/*enabled as 1 if debug messages to be printed*/
+#define DEBUG (1)
+
+/*enabled as 1 if application to be built*/
+#define NO_UNIT_TEST (1)
+
+#define MAX_SOURCE_SIZE (50)
+
+/*error codes and status*/
+enum Status{SUCCESS = 0, ERROR = -1, LUX_ERROR = -2, REMOTE_SOCKET_ERROR = -3, LOGGER_ERROR = -4,  TEMP_ERROR = -1000, BRIGHT = 1000, DARK = -1000};
+
+
+enum Status fridge_state;
+
+char source_id_buffer[MAX_SOURCE_SIZE];
+
+
+#endif#ifndef LUX_H_
+#define LUX_H_
+
+
+/**
+ * @\file	lux.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the declarations and header files for the lux sensor 
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <math.h>
+#include "i2c.h"
+#include "logger.h"
+#include "common.h"
+#include "heartbeat.h"
+/*****************************************************************
+						MACROS
+*****************************************************************/
+#define WRITE_COMMAND (0x80)
+#define WRITE_COMMAND_WORD (0x20)
+
+
+/*****************************************************************
+				Function Prototypes
+*****************************************************************/
+/*
+--------------------------------------------------------------------------------------------
+byte_access_lux_register
+--------------------------------------------------------------------------------------------
+*	This function helps to write/read in the lux registers as byte
+*
+* 	@\param			i2c file descriptor\
+*                   address of the register where it has to be read/written
+*                   mode - read - 0/ write - 1/ command - 2(MACROS defined for these)
+*                   register data pointer - where data to be stored for read mode
+*											this data will be written in write mode
+*                   flags - here any flag that has to be included in command registers can be passe
+*                           eg: flag for clearing interrupts 
+*                   
+*
+* 	@\return		error status
+*
+*/
+int byte_access_lux_register(int , uint8_t ,int  , uint8_t *, uint8_t );
+
+#endif
+#ifndef TEMP_H_
+#define TEMP_H_
+/**
+ * @\file	temp.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the tmp102 temperature sensor
+ * @\date	03/29/2019
+ *
+ */
+/*****************************************
+ *             INCLUDES
+ ***************************************/
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include "logger.h"
+#include "common.h"
+#include "heartbeat.h"
+
+#include "i2c.h"
+
+/*****************************************
+ *             Macros
+ ***************************************/
+#define TEMP_ADDR 0x48 // Slave address of temperature sensor
+
+#define SD_MODE  (1 << 8) // Bit mask for shutdown configuration
+#define EM_MODE  (1 << 4) // Bit mask for extended mode configuration
+#define CR0		 (1 << 6) // Bit mask for conversion mode configuration 1st bit
+#define CR1		 (1 << 7) // Bit mask for conversion mode configuration 2nd bit
+#define F0		 (1 << 11) //Bit mask for fault bit configuration 1st bit
+#define F1		 (1 << 12) //Bit mask for fault bit configuration 2nd bit
+#define TM_MODE	 (1 << 9)
+#define POL_MODE (1 << 10)
+
+#define READ_CONVERSION (0xC0) 
+#define READ_FAULT_BITS (0x18)
+#define READ_EM_MODE (0x10)
+#define READ_ALERT	 (0x20)
+
+#define BBG_INTERRUPT (49)
+
+
+/*****************************************
+ *             enums
+ ***************************************/
+typedef enum pointer_reg{
+	tempReg,
+	configReg,
+	tlowReg,
+	thighReg
+}pointer_reg;
+
+extern pthread_mutex_t lock_res;
+
+extern pthread_t temperature_thread;
+
+extern volatile int start_temp_thread;
+
+extern int fd1_w; /*for dumping the heart beat to a pipe*/
+
+/*flags for start up tests*/
+extern int temperature_thread_creation;
+
+extern int temp_dead_flag;
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_temp
+--------------------------------------------------------------------------------------------
+*	This is signal handler for temperature thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_temp(int num);
+
+/*
+--------------------------------------------------------------------------------------------
+temperature_task
+--------------------------------------------------------------------------------------------
+*	This is the temperature thread which will be spawned by the main task
+*
+* 	@\param			none
+*
+* 	@\return		none
+*
+*/
+void *temperature_task();
+/**
+--------------------------------------------------------------------------------------------
+temp_sensor_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the temperature sensor
+*
+* 	@\param			
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int temp_sensor_init();
+
+/**
+--------------------------------------------------------------------------------------------
+pointer_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will point to the register that needs to be writen/read
+*
+* 	@\param			 
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int pointer_reg_write(pointer_reg reg);
+
+/**
+--------------------------------------------------------------------------------------------
+tlow_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the tlow register
+*
+* 	@\param			
+*
+* 	@\return		tlow configured temperature
+*
+*/
+int tlow_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+thigh_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the thigh register
+*
+* 	@\param			
+*
+* 	@\return		thigh configured temperature
+*
+*/
+int thigh_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_read
+--------------------------------------------------------------------------------------------
+*	This function will read the temperature data register
+*
+* 	@\param			
+*
+* 	@\return		raw temperature value from sensor
+*
+*/
+int temp_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_celcius
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in celcius
+*
+* 	@\param			
+*
+* 	@\return		temperature in celcius
+*
+*/
+float temp_in_celcius();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_kelvin
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in kelvin
+*
+* 	@\param			
+*
+* 	@\return		temperature in kelvin
+*
+*/
+float temp_in_kelvin();
+
+
+/**
+--------------------------------------------------------------------------------------------
+temp_in_fahrenheit
+--------------------------------------------------------------------------------------------
+*	This function will return the temperature in fahrenheit
+*
+* 	@\param			
+*
+* 	@\return		temperature in fahrenheit
+*
+*/
+float temp_in_fahrenheit();
+
+/**
+--------------------------------------------------------------------------------------------
+tlow_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will write the tlow register
+*
+* 	@\param			temp_in_C  temperature in celcius
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int tlow_reg_write(uint8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+thigh_reg_write
+--------------------------------------------------------------------------------------------
+*	This function will write the thigh register
+*
+* 	@\param			temp_in_C  temperature in celcius
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int thigh_reg_write(uint8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_reg_read
+--------------------------------------------------------------------------------------------
+*	This function will read the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_reg_read();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_reg_write_default
+--------------------------------------------------------------------------------------------
+*	This function will write the default values to the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_reg_write_default();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_sd_continuous
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the shutdown bit in the configuration register. 
+*	Allows conitunous conversion.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_sd_continuous();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_sd
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the shutdown bit in the configuration register.
+*	Disables continuous conversion.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_sd();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_low
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_low();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_pol_alert_active_high
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the pol bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_pol_alert_active_high();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_comparator
+--------------------------------------------------------------------------------------------
+*	This function will write 0 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_comparator();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_tm_interrupt
+--------------------------------------------------------------------------------------------
+*	This function will write 1 to the tm bit in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_tm_interrupt();
+
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_1
+--------------------------------------------------------------------------------------------
+*	This function will write 00 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_1();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_2
+--------------------------------------------------------------------------------------------
+*	This function will write 01 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_2();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_4
+--------------------------------------------------------------------------------------------
+*	This function will write 10 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_4();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_fault_bits_6
+--------------------------------------------------------------------------------------------
+*	This function will write 11 to the fault bits in the configuration register.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_fault_bits_6();
+
+/**
+--------------------------------------------------------------------------------------------
+config_em_normal
+--------------------------------------------------------------------------------------------
+*	This function will write to the em bit in the configuration register.
+*	Enables 12 bit mode.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_em_normal();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_em_extended
+--------------------------------------------------------------------------------------------
+*	This function will write to the em bit in the configuration register.
+*	Enables 13 bit mode.
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_em_extended();
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_0_25HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 0.25hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_0_25HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_1HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 1hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_1HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_4HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 4hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_4HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_conversion_rate_8HZ
+--------------------------------------------------------------------------------------------
+*	This function will write to the CR bits in the configuration register.
+*	Sets the conversion rate to 8hz
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_conversion_rate_8HZ();
+
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_em
+--------------------------------------------------------------------------------------------
+*	This function will read the mode of operation from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_em();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_fault_bits
+--------------------------------------------------------------------------------------------
+*	This function will read the fault queue from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_fault_bits();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_conversion_rate
+--------------------------------------------------------------------------------------------
+*	This function will read the conversion rate from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_conversion_rate();
+
+/**
+--------------------------------------------------------------------------------------------
+config_read_alert
+--------------------------------------------------------------------------------------------
+*	This function will read the alert bit from the configuration register
+*
+* 	@\param
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int config_read_alert();
+
+#endif#ifndef I2C_H_
+#define I2C_H_
+
+/**
+ * @\file	i2c.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the declarations and header files for the I2C 
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <linux/i2c-dev.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+
+#include "common.h"
+/*****************************************************************
+						Function Protoypes
+*****************************************************************/
+/**
+--------------------------------------------------------------------------------------------
+i2c_setup
+--------------------------------------------------------------------------------------------
+*	This function helps in setting up the i2c bus for the slave
+*
+* 	@\param		i2c file descriptor, bus number, slave address in hexa
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int i2c_setup(int * , int ,int );
+
+#endif#ifndef LOGGER_H
+#define LOGGER_H
+
+/**
+ * @\file	logger.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the logger 
+ * @\date	03/30/2019
+ *
+ */
+
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/stat.h> // mkdir
+#include <mqueue.h>
+#include <time.h>
+#include <sys/syscall.h>
+#include "POSIX_timer.h"
+#include "common.h"
+
+
+/*****************************************************************
+						     Macros
+*****************************************************************/
+#define LOG_PATH "./log_folder/"
+
+#define LOG_MESSAGE(file_name,...) { \
+						  fprintf(file_ptr, ##__VA_ARGS__);\
+						  fflush(file_ptr);\
+						  }
+
+#define SOURCE_ID(source_id) { \
+						  sprintf(source_id,"[PID:%d] [TID:%lu] %s", getpid(), syscall(SYS_gettid), __func__);\
+						}
+
+
+#define QUEUE_NAME "/msg_queue"
+#define MAX_BUFFER_SIZE	200
+
+
+/*****************************************************************
+						     Globals
+*****************************************************************/
+typedef struct
+{
+	char *file_name;
+	char *file_path;	
+}file_descriptors;
+
+mqd_t msg_queue; // Message queue descriptor
+
+char buffer[MAX_BUFFER_SIZE];
+pthread_t logger_thread;
+FILE *file_ptr;
+
+extern char * log_t;
+
+extern int logger_thread_creation;
+
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_log
+--------------------------------------------------------------------------------------------
+*	This is signal handler for logger thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_log(int num);
+
+
+/**
+--------------------------------------------------------------------------------------------
+time_stamp
+--------------------------------------------------------------------------------------------
+*	This function will format the timestamp
+*
+* 	@\param			
+*
+* 	@\return		timestamp as a string
+*
+*/
+char *time_stamp();
+
+
+/**
+--------------------------------------------------------------------------------------------
+logger_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the logger
+*
+* 	@\param			char *		filepath
+*
+* 	@\return		void
+*
+*/
+void logger_init(char *);
+
+
+/**
+--------------------------------------------------------------------------------------------
+logger_thread_callback
+--------------------------------------------------------------------------------------------
+*	This function is the thread callback function for the logger
+*
+* 	@\param			void *		filename and path
+*
+* 	@\return		void
+*
+*/
+void *logger_thread_callback(void *);
+
+
+#endif
+/*****************************************************************
+                        Includes
+*****************************************************************/
+#include <stdio.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <string.h>
+#include <time.h>
+#include "common.h"
+
+/*****************************************************************
+                        MACROS
+*****************************************************************/
+#define PORT_NO 6001
+#define LOOP_BACK_ADDR "127.0.0.1"
+#define MAX_BUFFER_SIZE 200
+
+
+/*****************************************************************
+                        Function Prototypes
+*****************************************************************/
+/*
+--------------------------------------------------------------------------------------------
+socket_creation_client
+--------------------------------------------------------------------------------------------
+*	This helps in restarting the timer after expiration
+*
+* 	@\param			port number of server, IP address
+*
+* 	@\return		error status
+*
+*/int socket_creation_client(int port,char ip[20]);/**
+ * @\file	gpio.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the gpio pins 
+ * @\date	03/30/2019
+ *
+ */
+
+#ifndef GPIO_H
+#define GPIO_H
+
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <stdint.h>
+#include <string.h>
+#include "common.h"
+
+/*****************************************************************
+						     Macros
+*****************************************************************/
+
+#define USR_LED_BASE 53 // Pin for 1st USR LED on BBG
+#define MAX_BUFFER_SIZE 200
+
+/*****************************************************************
+						Function prototypes
+*****************************************************************/
+
+
+/**
+--------------------------------------------------------------------------------------------
+led_on
+--------------------------------------------------------------------------------------------
+*	This function will turn the user specified USR LED ON
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int led_on(int8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+led_off
+--------------------------------------------------------------------------------------------
+*	This function will turn the user specified USR LED OFF
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int led_off(int8_t);
+
+
+/**
+--------------------------------------------------------------------------------------------
+gpio_pin_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the user specified USR LED
+*
+* 	@\param			int8_t 		USR LED number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int gpio_pin_init(int8_t);
+
+/**
+--------------------------------------------------------------------------------------------
+gpio_interrupt_init
+--------------------------------------------------------------------------------------------
+*	This function will initialize the gpio Interrupt on BBG
+*
+* 	@\param			int8_t 		GPIO number
+*
+* 	@\return		On success it returns 0, 
+* 					On failure it returns -1
+*
+*/
+int gpio_interrupt_init(int8_t);
+
+#endif#ifndef HEARTBEAT_H_
+#define HEARTBEAT_H_
+
+/**
+ * @\file	heartbeat.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the declarations and header files for the heartbeat and spawing of threads
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+
+#include "POSIX_timer.h"
+#include "logger.h"
+#include "lux_wrapper.h"
+#include "temp.h"
+#include "i2c.h"
+#include "gpio.h"
+#include "remote_request.h"
+#include "common.h"
+#include "POST.h"
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <string.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <poll.h>
+
+/*****************************************************************
+						MACROS
+*****************************************************************/
+extern pthread_mutex_t lock_res;
+
+/*****************************************************************
+						Function Protypes
+*****************************************************************/
+/*
+--------------------------------------------------------------------------------------------
+beat_timer_handler
+--------------------------------------------------------------------------------------------
+*	This function is the timer handler for heart beat timer
+*
+* 	@\param			signal value ( dummy)
+*
+* 	@\return		none
+*
+*/
+void beat_timer_handler(union sigval );
+
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_main
+--------------------------------------------------------------------------------------------
+*	This is signal handler for main thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_main(int num);
+
+/*****************************************************************
+						Global declarations
+*****************************************************************/
+/* FIFO file path */
+extern char * Temp;
+extern char * Lux ;
+extern char * log_t;
+
+/*for lux measurement*/
+extern uint16_t CH0;
+extern uint16_t CH1;
+extern int file_des_lux;
+
+/*logger timer handler*/
+extern timer_t timer_id_log;
+
+/*Logger pipe descriptor*/
+extern  int fd3_w;
+/*****************************************************************
+						MACROS
+*****************************************************************/
+#define HEART_BEAT_CHECK_PERIOD (900000000)//0.9 s
+
+
+#endif /* HEARTBEAT_H_ */
+
+#ifndef POSIX_Timer_H_
+#define POSIX_Timer_H_
+
+/**
+ * @\file	POSIX_timer.h
+ * @\author	Steve Antony X
+ * @\brief	This files contains the declarations and header files for POSIX timer modules
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include <stdio.h>
+#include <pthread.h>
+#include <string.h>
+#include <time.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h> 
+#include <fcntl.h> 
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
+
+#include "common.h"
+/*****************************************************************
+						Function Protypes
+*****************************************************************/
+/*
+--------------------------------------------------------------------------------------------
+kick_timer
+--------------------------------------------------------------------------------------------
+*	This helps in restarting the timer after expiration
+*
+* 	@\param			timer descriptor, timer expiration time in ns
+*
+* 	@\return		error status
+*
+*/
+int kick_timer(timer_t, int);
+
+/*
+--------------------------------------------------------------------------------------------
+setup_timer_POSIX
+--------------------------------------------------------------------------------------------
+*	This helps in creating the timer
+*
+* 	@\param			timer descriptor, timer handler function
+*
+* 	@\return		error status
+*
+*/
+int setup_timer_POSIX(timer_t *,void (*handler)(union sigval));
+
+/*
+--------------------------------------------------------------------------------------------
+stop_timer
+--------------------------------------------------------------------------------------------
+*	This helps in deleting the timer
+*
+* 	@\param			timer descriptor
+*
+* 	@\return		error status
+*
+*/
+int stop_timer(timer_t);
+
+/*
+--------------------------------------------------------------------------------------------
+temp_timer_handler
+--------------------------------------------------------------------------------------------
+*	This is the timer handler for temperature timer
+*
+* 	@\param			dummy
+*
+* 	@\return		error status
+*
+*/
+void temp_timer_handler(union sigval);
+
+/*
+--------------------------------------------------------------------------------------------
+lux_timer_handler
+--------------------------------------------------------------------------------------------
+*	This is the timer handler for lux timer
+*
+* 	@\param			dummy
+*
+* 	@\return		error status
+*
+*/
+void lux_timer_handler(union sigval);
+
+/*
+--------------------------------------------------------------------------------------------
+log_timer_handler
+--------------------------------------------------------------------------------------------
+*	This is the timer handler for log timer
+*
+* 	@\param			dummy
+*
+* 	@\return		error status
+*
+*/
+void log_timer_handler(union sigval);
+
+/*****************************************************************
+						Globals
+*****************************************************************/
+extern timer_t timer_id_temp, timer_id_lux, timer_id_heartbeat, timer_id_log;
+extern int FLAG_READ_TEMP;
+extern int FLAG_READ_LUX;
+extern int FLAG_LOG;
+/*****************************************************************
+						MACROS
+*****************************************************************/
+#define Delay_NS (200000000)//200ms
+
+
+#endif /* POSIX_Timer_H_ *//**
+ * @\file	unit.c
+ * @\author	Steve Antony X
+ * @\brief	This files performs unit testing for Lux, Temperature and Logger module
+ * @\date	03/31/2019
+ *
+ */
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "lux_wrapper.h"
+#include "lux.h"
+#include "temp.h"
+#include <assert.h>
+#include "common.h"
+#include <stdio.h>
+#include "gpio.h"
+#include "logger.h"
+
+/*****************************************************************
+						Globals
+*****************************************************************/
+int file_des_lux;
+uint8_t register_data;
+int ret_status;
+
+/*****************************************************************
+						Unit test for Lux
+*****************************************************************/
+int unit_lux()
+{
+	printf("Begin lux sensor test\n");
+
+
+	ret_status = i2c_setup(&file_des_lux,2,0x39);
+	assert(ret_status == SUCCESS);
+
+	/*********************CONTROL_REGISTER*********************************/
+	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	register_data = 0x03;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	
+
+	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(register_data ==  0x33);//reserved set as 3
+	
+	/*************************TIMING_REGISTER*****************************/
+	ret_status =  byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+	register_data = 0x02;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+
+	ret_status = byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(register_data ==  0x02);
+
+
+	/***********************INTERRUPT Register*******************************/
+	ret_status =  byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+	register_data = 0x11;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+
+	ret_status = byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	assert(register_data ==  0x11);
+
+	
+	/***********************INDICATION_REGISTER*******************************/
+
+	ret_status =  byte_access_lux_register(file_des_lux, INDICATION_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	
+	/**********************DATA0LOW_REGISTER********************************/
+	ret_status =  byte_access_lux_register(file_des_lux, DATA0LOW_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	
+	/**********************DATA0HIGH_REGISTER********************************/
+	ret_status =  byte_access_lux_register(file_des_lux, DATA0HIGH_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	
+	/********************DATA1LOW_REGISTER**********************************/
+	ret_status =  byte_access_lux_register(file_des_lux, DATA1LOW_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	
+	/********************DATA1HIGH_REGISTER**********************************/
+	ret_status =  byte_access_lux_register(file_des_lux, DATA1HIGH_REGISTER,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);	
+	
+
+	register_data = 0;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	
+	/********************THRESHHIGHLOW**********************************/
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0x02; //set to 3000
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	// /***********************THRESHHIGHHIGH*******************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0xBB; //set to 3000
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+	/********************THRESHLOWLOW**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0x01; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	/********************THRESHLOWHIGH**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	register_data = 0x02; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	assert(ret_status == SUCCESS);
+
+	/*Writing to threshold register*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	assert(ret_status == SUCCESS);
+
+
+	/******************************************************/
+
+	printf("Ending lux sensor test\n");
+	return SUCCESS;
+
+}
+
+/*****************************************************************
+				Unit test for Temperature module
+*****************************************************************/
+int unit_temp()
+{
+	printf("Begin temperature sensor test\n");
+	uint16_t configuration;
+
+	/******************************************************/
+	/* Testing temperature init */
+	ret_status = temp_sensor_init();
+	assert(ret_status == SUCCESS);
+
+	/******************************************************/
+	/* Writing default value 0x60A0 to the control register */
+	ret_status = config_reg_write_default();
+	assert(ret_status == SUCCESS);
+
+	ret_status = config_reg_read(&configuration);
+	assert(ret_status == SUCCESS);
+
+	assert(configuration == 0x60A0);
+
+	/******************************************************/
+	/* Writing 10 degree celcius to tlow register */
+	ret_status = tlow_reg_write(10);
+	assert(ret_status == SUCCESS);	
+
+
+	ret_status = tlow_reg_read();
+	assert(ret_status == 160); // (160 * 0.0625 = 10 degree C)
+
+
+	/******************************************************/
+	/* Writing 100 degree celcius to tlow register */
+	ret_status = thigh_reg_write(100);
+	assert(ret_status == SUCCESS);
+
+	ret_status = thigh_reg_read();
+	assert(ret_status == 1600); // (1600 * 0.0625 = 100 degree C)
+
+
+	/******************************************************/
+	/* Configuring sensor to work in shutdown mode */
+	ret_status = config_sd();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0xE1A0);
+
+	/******************************************************/
+	/* Configuring sensor to work in continuous conversion mode */
+	ret_status = config_sd_continuous();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x60A0);
+
+	/******************************************************/
+	/* Configuring sensor to alert after 6 fault queue updates */
+	ret_status = config_fault_bits_6();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78A0);
+
+	/******************************************************/
+	/* Configuring sensor to work in 12 bit mode */
+	ret_status = config_em_normal();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78A0);
+
+	/******************************************************/
+	/* Configuring sensor to work in 13 mode */
+	ret_status = config_em_extended();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78B0);
+
+	/******************************************************/
+	/* Configuring sensor to sample at 8hz */
+	ret_status = config_conversion_rate_8HZ();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78F0);
+
+	/******************************************************/
+	/* Configuring sensor alert pin to be active high */
+	ret_status = config_pol_alert_active_high();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x7CD0);
+
+	/******************************************************/
+	/* Configuring sensor alert pin to be active high */
+	ret_status = config_pol_alert_active_low();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78F0);
+
+	/******************************************************/
+	/* Reading alert pin (alert pin is active low) */
+	ret_status = config_read_alert();
+	assert(ret_status == 1);
+
+	printf("Ending temperature sensor test\n");
+
+	return SUCCESS;
+
+}
+
+/*****************************************************************
+					Unit test for Logger
+*****************************************************************/
+int unit_logger(char *file_name)
+{
+	printf("Begin logger test\n");
+	logger_init(file_name);
+	char buffer[MAX_BUFFER_SIZE];
+
+	strcpy(buffer,"UNIT TESTING");
+	
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	
+	mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	assert(strcmp(buffer,"UNIT TESTING") == 0);
+	
+
+	mq_close(msg_queue);
+    mq_unlink(QUEUE_NAME);
+
+    printf("Ending logger test\n");
+	// assert(ret_status == SUCCESS);
+
+	return SUCCESS;
+}	
+
+/*****************************************************************
+					Main program for unit testing
+*****************************************************************/
+int main(int argc, char *argv[])
+{
+	if(argc < 3)
+	{
+		perror("Please enter the <log file name> follwed by <log file folder name>");
+		exit(ERROR);
+	}
+	char *file_name_main = argv[1];
+	char *file_path = argv[2];
+	char file_name[MAX_BUFFER_SIZE];
+	sprintf(file_name,"%s%s/%s",LOG_PATH, file_path, file_name_main);
+
+	int ret_val;
+
+	ret_val = unit_logger(file_name);
+
+	if(!ret_val)
+		printf("Logger unit test passed\n");
+
+	ret_val = unit_temp();
+	if(!ret_val)
+		printf("Temperature unit test passed\n");
+
+
+	ret_val = unit_lux();
+	if(!ret_val)	
+		printf("Lux unit test passed\n");
+
+
+
+	return SUCCESS;
+}/**
+ * @\file	post.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the lux sensor 
+ * @\date	03/30/2019
+ *
+ */
+
+/*****************************************************************
+					     Includes
+*****************************************************************/
+#include "POST.h"
+
+/*****************************************************************
+					Power On Self Test - POST
+*****************************************************************/
+int startup_test()
+{
+	int ret_val;
+
+	/*Checks the temperature sensor power on check*/ 
+	ret_val = temp_sensor_init();
+	if(ret_val == ERROR)
+	{
+		perror("Satrup test temperature init failed");
+		temp_dead_flag = 1;
+	}
+
+	ret_val = (int)temp_in_celcius();
+	if(ret_val <-40 || ret_val > 128)
+	{
+		perror("Sartup temperature value test failed");
+		temp_dead_flag = 1;
+	}
+	
+	if(lux_sensor_setup() == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
+
+	/*Checks the light sensor power on check*/
+	if(indication_register() == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
+	
+	usleep(500);
+	ret_val = (int)get_lux();
+	if(ret_val == ERROR)
+	{
+		perror("Sartup lux value test failed");
+		lux_dead_flag = 1;
+	}
+	
+	/*Checks if the threads are spawned properly*/
+	if(!remote_socket_thread_creation)
+	{
+		perror("Sartup remote request thread creation test failed");
+		remote_socket_dead_flag = 1;
+	}
+	
+	if(!temperature_thread_creation)
+	{
+		perror("Sartup temperature thread creation test failed");
+		temp_dead_flag = 1;
+	}
+	
+
+	if(!lux_thread_creation)
+	{
+		perror("Sartup lux thread creation test failed");
+		lux_dead_flag = 1;
+	}
+	
+	if(!logger_thread_creation)
+	{
+		perror("Sartup logger thread creation test failed");
+		logger_dead_flag = 1;
+	}
+	
+	if(!lux_dead_flag)
+	{
+		start_lux_thread = 1;
+	}	
+	
+
+	if(!temp_dead_flag)
+	{
+		start_temp_thread = 1;
+	}
+	
+	/*returns error code for any failure in POST*/
+	if(temp_dead_flag || lux_dead_flag || remote_socket_dead_flag || logger_dead_flag)
+	{
+		return ERROR;
+	}
+	
+
+	return SUCCESS;
+}
+/**
+ * @\file	temp.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the definitions of wrapper functions for lux registers
+ * @\date	03/29/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "lux_wrapper.h"
+
+
+/*****************************************************************
+						Global definitions
+*****************************************************************/
+/*lux descriptor in i2c*/
+int file_des_lux;
+
+/*for writing and reading as byte from the registers*/
+uint8_t register_data;
+
+/*for writing and reading as word from the registers*/
+uint16_t register_data_word;
+
+/*for storing MSB and LSB of CH0 of lux*/
+uint16_t MSB_0;
+uint16_t LSB_0;
+
+/*for storing MSB and LSB of CH1 of lux*/
+uint16_t MSB_1;
+uint16_t LSB_1;
+
+/*16 bit value of CH0 and CH1*/
+uint16_t CH0;
+uint16_t CH1;
+
+/***********************************************
+  Signal handler for killing lux thread
+***********************************************/
+void hanler_kill_lux(int num)
+{
+	printf("Encountered SIGUSR2 signal\n");
+	static int FLAG = 1;
+
+	if((lux_thread_creation == 1) && (FLAG == 1))
+	{
+		printf("Exiting lux thread\n");
+		
+		if(start_lux_thread)
+		{
+			close(fd2_w);
+			stop_timer(timer_id_lux);
+		}
+		pthread_cancel(lux_thread);
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Lux thread already dead\n");
+	}
+
+}
+/*****************************************************************
+						lux_thread
+*****************************************************************/
+void *lux_task()
+{
+
+	while(!start_lux_thread);
+
+	/*for stroing the lux value*/
+	float lux = 0;
+
+	char buffer[MAX_BUFFER_SIZE];
+
+	/*log the process id and thread group id of the thread*/
+	memset(buffer,'\0',MAX_BUFFER_SIZE);
+	SOURCE_ID(source_id_buffer);
+	sprintf(buffer,"INFO [PID:%d] [TID:%lu]", getpid(), syscall(SYS_gettid));
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	/*setting the timer for lux thread*/
+	if((setup_timer_POSIX(&timer_id_lux,lux_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s creating timer for lux failed- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+
+	if((kick_timer(timer_id_lux, Delay_NS)) == ERROR)
+	{
+		perror("Error on kicking timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s kicking timer for lux failed- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+	
+
+
+	/*opening a pipe to dump the heartbeat from lux thread to maintask*/
+	fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	if(fd2_w == ERROR)
+	{
+		perror("Error on creating FIFO fd2_w for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in lux sensor init- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+
+	/*setting up the lux sensor*/
+	if(lux_sensor_setup()<0)
+	{
+		perror("Error on lux sensor configuration\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %sFailed in lux sensor setup", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	while(1)
+	{
+		/*enters if the flag is set in timer of lux thread
+		lux value will be read when the timer expires*/
+		if(FLAG_READ_LUX)
+		{
+
+			/*sends heartbeat*/
+			if((write(fd2_w, "L", 1)) == ERROR)
+			{
+				perror("Error on write of lux heartbeat\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s on sending lux heartbeat", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+			
+
+			/*logging the heartbeat*/
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			SOURCE_ID(source_id_buffer);
+			sprintf(buffer,"DEBUG %s Pulse from lux thread", source_id_buffer);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+			/*introduced delay for adc conversion*/
+			usleep(500);
+			if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
+			{
+				led_on(0);
+				// printf("LED ON LUX\n");
+				perror("Error on reading channels\n");
+				printf("Lux sensor error, trying to reconnect\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s Lux sensor error,  trying to reconnect", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+
+			else
+			{
+				led_off(0);
+				// printf("LED OFF LUX\n");
+
+				/*measuring lux value*/
+				lux = lux_measurement(CH0,CH1);
+				printf("lux %f\n",lux);
+
+				/*checks if a transition occured from dark to bright
+				 or bright to dark
+				 the threshold value is set as 70*/
+				has_state_transition_occurred(lux);
+
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"INFO %s Lux = %f", source_id_buffer, lux);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				/*get the current state of the fridge door
+				 whether it is opened or closed*/
+				fridge_state  = get_current_state_fridge(lux);
+				if(fridge_state == BRIGHT)
+				{
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					SOURCE_ID(source_id_buffer);
+					sprintf(buffer,"DEBUG %s Fridge state - Door opened", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == DARK)
+				{
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					SOURCE_ID(source_id_buffer);
+					sprintf(buffer,"DEBUG %s Fridge state - Door Closed", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == ERROR)
+				{
+					printf("Fridge in unknown state\n");
+					SOURCE_ID(source_id_buffer);
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					sprintf(buffer,"DEBUG %s Fridge state - unknown", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+				}
+
+			}
+
+			/*clearing the flag which will be set when the timer of lux will be triggered*/
+        	FLAG_READ_LUX = 0;
+		}
+	}
+	close(fd2_w);
+	return SUCCESS;
+}
+/*****************************************************************
+					setting up lux sensor
+*****************************************************************/
+int lux_sensor_setup()
+{
+	int ret_status;
+
+	pthread_mutex_lock(&lock_res);
+	ret_status = i2c_setup(&file_des_lux,2,0x39);
+	pthread_mutex_unlock(&lock_res);
+
+	/*i2c setup*/
+	if(ret_status == ERROR)
+	{
+		perror("Error on i2c bus set up for lux sensor");
+		return ERROR;
+	}
+
+	/**********************************/
+	/*command to write on control register*/
+	ret_status = byte_access_lux_register(file_des_lux, CONTROL_REGISTER,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
+	if(ret_status == ERROR)
+	{
+		perror("Error on CONTROL_REGISTER of lux sensor");
+		return ERROR;
+	}
+
+	/*Writing to control register*/
+	register_data = 0x03;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on CONTROL_REGISTER of  lux sensor");
+		return ERROR;
+	}
+
+	/**********************************/
+	/*command to write on TIMING_REGISTER*/
+	ret_status = byte_access_lux_register(file_des_lux, TIMING_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on TIMING_REGISTER of  lux sensor");
+		return ERROR;
+	}
+	
+	/*Writing to timing register*/
+	register_data = 0x12;
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on TIMING_REGISTER of  lux sensor");
+		return ERROR;
+	}
+	
+	/**********************************/
+	/*command to write as a word for high threshold register */
+	/*upper threshold is set to 3000*/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHLOW of lux sensor");
+		return ERROR;
+	}
+
+	/*Writing to threshold register*/
+	register_data = 0xB8; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHLOW of lux sensor");
+		return ERROR;
+	}
+
+	/**********************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHHIGH of lux sensor");
+		return ERROR;
+	}
+
+	/*Writing to threshold register*/
+	register_data = 0xBB; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on THRESHHIGHHIGH of lux sensor");
+		return ERROR;
+	}
+
+	/**********************************/
+	/*command to write for INTERRUPT register */
+	ret_status = byte_access_lux_register(file_des_lux, INTERRUPT,COMMAND , &register_data, CLEAR_PENDING_INTERUPTS );
+	if(ret_status == ERROR)
+	{
+		perror("Error on INTERRUPT_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*Writing to INTERRUPT register*/
+	register_data = 0x12; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on INTERRUPT_REGISTER of lux sensor");
+		return ERROR;
+	}
+	return SUCCESS;
+	
+}
+
+/*****************************************************************
+Indication register for start up to get part number and revision number of sensor
+*****************************************************************/
+int indication_register()
+{
+	
+	int ret_status;
+
+	ret_status = byte_access_lux_register(file_des_lux, INDICATION_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on INTERRUPT_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*Writing to INTERRUPT register*/
+	register_data = 0x12; 
+	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on INTERRUPT_REGISTER of lux sensor");
+		return ERROR;
+	}
+
+
+	/*logging part numer and revision number of lux sensor*/
+	uint8_t part_no = register_data & (0xF0);
+	part_no = part_no >> 4;
+	printf("Part numer of Lux sensor %d\n",part_no);
+
+	uint8_t rev_no = register_data & (0x0F);
+	printf("Revision numer of Lux sensor %d\n",rev_no);
+
+
+	memset(buffer,0,MAX_BUFFER_SIZE);
+	SOURCE_ID(source_id_buffer);
+	sprintf(buffer,"INFO %s LUX sensor PNO: %d Rev no %d",source_id_buffer,part_no,rev_no);
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+
+	return SUCCESS;
+}
+
+/*****************************************************************
+			         Reading CH0
+*****************************************************************/
+int read_channel_0()
+{
+
+	int ret_status;
+
+	ret_status = byte_access_lux_register(file_des_lux, DATA0LOW_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA0LOW_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*reading CH0 value lower byte*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA0LOW_REGISTER of lux sensor");
+		return ERROR;
+	}
+	LSB_0 = 0;
+	LSB_0 = register_data;
+
+	ret_status = byte_access_lux_register(file_des_lux, DATA0HIGH_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA0HIGH_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*reading CH0 value lower byte*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA0HIGH_REGISTER of lux sensor");
+		return ERROR;
+	}
+
+	MSB_0 = 0;
+	MSB_0 = register_data;
+
+	/*forming the full 16 bit from MSB and LSB*/
+	CH0 = (MSB_0 << 8);
+	CH0 |= LSB_0;
+
+
+	return SUCCESS;
+
+
+}
+
+/*****************************************************************
+			         Reading CH1
+*****************************************************************/
+int read_channel_1()
+{
+	int ret_status;
+
+	ret_status = byte_access_lux_register(file_des_lux, DATA1LOW_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA1LOW_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*reading CH0 value lower byte*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA1LOW_REGISTER of lux sensor");
+		return ERROR;
+	}
+	LSB_1 = 0;
+	LSB_1 = register_data;
+
+	ret_status = byte_access_lux_register(file_des_lux, DATA1HIGH_REGISTER,COMMAND , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA1HIGH_REGISTER of lux sensor");
+		return ERROR;
+	}
+	
+	/*reading CH0 value lower byte*/
+	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
+	if(ret_status == ERROR)
+	{
+		perror("Error on DATA1HIGH_REGISTER of lux sensor");
+		return ERROR;
+	}
+	MSB_1 = 0;
+	MSB_1 = register_data;
+
+	/*forming the full 16 bit from MSB and LSB*/
+	CH1 = (MSB_1 << 8);
+	CH1 |= LSB_1;
+
+
+	return SUCCESS;
+
+	 
+}
+  
+/*****************************************************************
+			         Getting lux value
+*****************************************************************/
+float lux_measurement(float CH0, float CH1)
+{
+
+	float ratio = (CH1 / CH0);
+
+	
+
+	//0 < CH1/CH0 ≤ 0.50 Sensor Lux = (0.0304 x CH0) – (0.062 x CH0 x ((CH1/CH0)1.4))
+
+	if((ratio <=0.5)&& (ratio > 0))
+		return ((0.0304 * CH0) - (0.062 * CH0 * (powf(ratio, 1.4))));
+
+	//0.50 < CH1/CH0 ≤ 0.61 Sensor Lux = (0.0224 x CH0) – (0.031 x CH1)
+
+	else if((ratio  > 0.5)&& (ratio <= 0.61))
+		return ((0.0224 * CH0) - (0.031 * CH1));
+
+    //0.61 < CH1/CH0 ≤ 0.80 Sensor Lux = (0.0128 x CH0) – (0.0153 x CH1)
+	else if((ratio  > 0.61)&& (ratio <= 0.8))
+		return (0.0128 * CH0) - (0.0153 * CH1);
+
+	//0.80 < CH1/CH0 ≤ 1.30 Sensor Lux = (0.00146 x CH0) – (0.00112 x CH1)
+	else if((ratio  > 0.80)&& (ratio <= 1.30))
+		return (0.00146 * CH0) - (0.00112 * CH1);
+
+	//CH1/CH0>1.30 Sensor Lux = 0
+	else if(ratio  > 1.30)
+		return 0;
+
+	else
+	{
+		printf("Invalid Lux measurement\n");
+		return ERROR;
+	}
+
+
+}
+
+/*****************************************************************
+			         Checks for state transition
+*****************************************************************/
+void has_state_transition_occurred(float lux)
+{
+	static float prev_lux = 0;
+	if((lux > THRESHOLD_FOR_STATE_CHANGE) && (prev_lux <THRESHOLD_FOR_STATE_CHANGE))
+	{
+		printf("State changed from Dark to Bright\n");
+		memset(buffer,0,MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"INFO %s State changed from Dark to Bright\n", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		led_on(3);
+
+	}
+	else if((lux < THRESHOLD_FOR_STATE_CHANGE) && (prev_lux > THRESHOLD_FOR_STATE_CHANGE))
+	{
+		printf("State changed from Bright to Dark\n");
+		memset(buffer,0,MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"INFO State %s changed from Bright to Dark\n", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		led_off(3);
+	}
+
+	prev_lux = lux;
+
+
+}
+
+
+/*****************************************************************
+			         Wrapper for lux measurement
+*****************************************************************/
+float get_lux()
+{
+	usleep(500);
+	if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
+	{
+		return ERROR;
+	}
+
+	else
+	{
+		
+		return lux_measurement(CH0,CH1);
+		
+	}
+}
+
+
+/*****************************************************************
+			        Get the state for fridge door
+*****************************************************************/
+enum Status get_current_state_fridge(float value)
+{
+	
+	if(value > THRESHOLD_FOR_STATE_CHANGE)
+		return BRIGHT;
+	if(value <= THRESHOLD_FOR_STATE_CHANGE)
+		return DARK;
+	else
+		return ERROR;
+
+}
+
+/**
+ * @\file	POSIX_timer.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the function definitions for POSIX timer 
+ * @\date	03/30/2019
+ *
+ */
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "POSIX_timer.h"
+
+/*****************************************************************
+						Global declaration
+*****************************************************************/
+// FIFO file path 
+ char * Temp = "/tmp/tmp_to_main";
+ char * Lux = "/tmp/lux_to_main";
+ char * log_t = "/tmp/log_to_main";
+ 
+/*****************************************************************
+					POSIX Timer Handler
+*****************************************************************/
+
+void temp_timer_handler(union sigval val)
+{
+	FLAG_READ_TEMP = 1;
+
+	kick_timer(timer_id_temp, Delay_NS);
+}
+
+/*****************************************************************
+					POSIX Timer Handler
+*****************************************************************/
+
+void lux_timer_handler(union sigval val)
+{
+
+	FLAG_READ_LUX = 1;
+
+	kick_timer(timer_id_lux, Delay_NS);
+}
+
+/*****************************************************************
+					POSIX Timer Handler
+*****************************************************************/
+
+void log_timer_handler(union sigval val)
+{
+	FLAG_LOG = 1;
+
+	kick_timer(timer_id_log, Delay_NS);
+}
+
+/*****************************************************************
+					POSIX Timer configuration
+*****************************************************************/
+int setup_timer_POSIX(timer_t *timer_id,void (*handler)(union sigval))
+{
+	struct 	sigevent sev;
+	sev.sigev_notify = SIGEV_THREAD; //Upon timer expiration, invoke sigev_notify_function
+	sev.sigev_notify_function = handler; //this function will be called when timer expires
+	sev.sigev_notify_attributes = NULL;
+	sev.sigev_value.sival_ptr = &timer_id;
+
+
+	if(timer_create(CLOCK_REALTIME, &sev, timer_id) != 0) //on success, timer id is placed in timer_id
+	{
+		return ERROR;
+	}  
+
+
+
+
+    return SUCCESS;
+}
+
+/*****************************************************************
+					Start configuration
+			Parameter : delay in nano secs
+*****************************************************************/
+int kick_timer(timer_t timer_id, int interval_ns)
+{
+   struct itimerspec in;
+
+	in.it_value.tv_sec = 0;
+    in.it_value.tv_nsec = interval_ns; //sets initial time period
+    in.it_interval.tv_sec = 0;
+    in.it_interval.tv_nsec = interval_ns; //sets interval
+    
+    //issue the periodic timer request here.
+    if( (timer_settime(timer_id, 0, &in, NULL)) != SUCCESS)
+    {
+    	return ERROR;
+    }
+    return SUCCESS;
+}
+
+/*****************************************************************
+					Destroy Timer
+*****************************************************************/
+int stop_timer(timer_t timer_id)
+{
+	if( (timer_delete(timer_id)) != SUCCESS)
+    {
+    	printf("Error on delete timer function\n");
+    	return ERROR;
+    }
+	
+
+    return SUCCESS;
+}
+/**
+ * @\file	i2c.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the function definitions for I2C 
+ * @\date	03/30/2019
+ *
+ */
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "i2c.h"
+
+/*****************************************************************
+						Global definition
+*****************************************************************/
+char bus[15];
+
+/*****************************************************************
+						setting up i2c driver
+*****************************************************************/
+int i2c_setup(int *desp, int bus_no,int address)
+{
+	memset(bus,0,sizeof(bus));
+
+	sprintf(bus,"/dev/i2c-%d",bus_no);
+
+	if((*desp = open(bus, O_RDWR)) < 0)
+	{
+		perror("Error on opening the bus\n");
+		return ERROR;
+	}
+
+	if ((ioctl(*desp, I2C_SLAVE, address)) < 0)
+	{
+		perror("Error on input output control of bus\n");
+		return ERROR;
+	}
+
+	return SUCCESS;
+
+}/**
+ * @\file   remote_request.c
+ * @\author Sanju Prakash Kannioth
+ * @\brief  This files contains the definitions of Socket IPC and remote request server theread
+ * @\date   03/30/2019
+ *
+ */
+
+/*****************************************************************
+                        Includes
+*****************************************************************/
+#include "remote_request.h"
+
+/*****************************************************************
+                        Globals
+*****************************************************************/
+socklen_t clilen;
+struct sockaddr_in to_address;
+/**********************************************
+       Function for server socket creation
+       Parameters : Port number
+***********************************************/
+int socket_creation_server(int port)
+{
+
+        //creating the socket for client 
+
+        server_socket = socket(AF_INET,SOCK_STREAM,0);// setting the client socket
+        if(server_socket < 0 ) // enters this loop if port number is not given as command line argument
+        {
+                //printing error message when opening client socket
+                perror("Error opening server socket\n");
+                return ERROR;
+        }
+
+
+        struct sockaddr_in server_address;
+
+        memset(&server_address,0,sizeof(server_address));
+
+        //assigning values for the server address structure
+        server_address.sin_family = AF_INET;
+        server_address.sin_port = htons(port); // converting to network byte order
+        server_address.sin_addr.s_addr = INADDR_ANY;
+
+
+
+        if(bind(server_socket,(struct sockaddr*)&server_address,sizeof(server_address))<0)
+        {
+            perror("Binding failed in the server");
+            return ERROR;
+        }
+
+        /*Listening for clients*/
+        if(listen(server_socket,LISTEN_MAX) < 0)
+        {
+            perror("Error on Listening ");
+            return ERROR;
+        }
+        else
+        {
+            printf("\nlistening to remote requests.....\n");
+        }
+
+        return SUCCESS;
+
+}
+
+/**************************************************
+       Function for remote request thread creation
+       Parameters : Structure typecasted to void *
+***************************************************/
+void *remote_request_callback(void *arg)
+{
+	
+
+	char buffer[MAX_BUFFER_SIZE];
+    
+    
+    memset(buffer,'\0',MAX_BUFFER_SIZE);
+    SOURCE_ID(source_id_buffer);
+    sprintf(buffer,"DEBUG %s Remote request task started", source_id_buffer);
+    mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+    //creating socket for server
+	if(socket_creation_server(PORT_NO)== ERROR)
+    {
+        perror("Error on socket creation - killed remote request socket");
+        memset(buffer,'\0',MAX_BUFFER_SIZE);
+        SOURCE_ID(source_id_buffer);
+        sprintf(buffer,"ERROR %s Socket for server failed- Killed remote request thread", source_id_buffer);
+        mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+        pthread_cancel(remote_request_thread);
+    } 
+
+
+    while(1)
+    {
+        new_socket = 0;
+        memset(&to_address,0,sizeof(to_address));
+
+
+        clilen = sizeof(to_address);
+
+        /*accepting client requests*/
+        new_socket = accept(server_socket,(struct sockaddr*) &to_address, &clilen);
+        if(new_socket<0)
+        {
+            perror("Error on accepting client");
+        }
+        else
+        {
+            printf("established connection\n");
+        }
+
+        /*Forked the request received so as to accept multiple clients*/
+    	int child_id = 0;
+        /*Creating child processes*/
+        /*Returns zero to child process if there is successful child creation*/
+        child_id = fork();
+
+        // error on child process
+        if(child_id < 0)
+        {
+            perror("error on creating child\n");
+            exit(1);
+        }
+
+        //closing the parent
+        if (child_id > 0)
+        {
+            close(new_socket);
+            waitpid(0, NULL, WNOHANG);  //Wait for state change of the child process
+        }
+
+        if(child_id == 0)
+        {
+
+            while(recv(new_socket, message ,MAX_BUFFER_SIZE, 0) > 0)
+            {
+            
+
+                /*receives temperature request in celcius from remote request client*/
+         	    if(strcmp(message,"tempc") == 0)
+                {
+
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+         		    printf("tempc Request sent to remote request\n");
+                    float tempc = temp_in_celcius();
+                    if((tempc != TEMP_ERROR) && (temp_dead_flag != 1))
+                    {
+                        sprintf(buffer,"Temperature in Celcius = %f\n",tempc);
+                    }
+                    else
+                    {
+                        sprintf(buffer,"Error on temperature sensor\n");
+                    }
+
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+         	    }
+
+                /*receives temperature request in Kelvin from remote request client*/
+                else if(strcmp(message,"tempk") == 0)
+                {
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+                    printf("tempk Request sent to remote request\n");
+                    float tempk = temp_in_kelvin();
+                    if((tempk != TEMP_ERROR) && (temp_dead_flag != 1))
+                    {
+                        sprintf(buffer,"Temperature in Kelvin = %f\n",tempk);
+                    }
+                    else
+                    {
+                        sprintf(buffer,"Error on temperature sensor\n");
+                    }
+
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+                }
+
+                /*receives temperature request in fahrenheit from remote request client*/
+                else if(strcmp(message,"tempf") == 0)
+                {
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+                    printf("tempf Request sent to remote request\n");
+                    float tempf = temp_in_fahrenheit();
+                    if((tempf != TEMP_ERROR) && (temp_dead_flag != 1))
+                    {
+                        sprintf(buffer,"Temperature in fahrenheit = %f\n",tempf);
+                    }
+                    else
+                    {
+                        sprintf(buffer,"Error on temperature sensor\n");
+                    }
+
+
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+                }
+
+                /*receives brightness request in lux from remote request client*/
+         	    else if(strcmp(message,"lux") == 0)
+         	    {
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+                    printf("tempk Request sent to remote request\n");
+                    float lux = get_lux();
+                    if((lux != ERROR) && (lux_dead_flag != 1))
+                    {
+                        sprintf(buffer,"brightness in lux = %f\n",lux);
+                    }
+                    else
+                    {
+                        sprintf(buffer,"Error on lux sensor\n");
+                    }
+
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+
+         	    }
+
+                /*receives fridge door status from remote request client*/
+                else if(strcmp(message,"door") == 0)
+                {
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+                    printf("fridge state Request sent to remote request\n");
+                    float lux = get_lux();
+                    fridge_state = get_current_state_fridge(lux);
+                    if((fridge_state == BRIGHT) && (lux_dead_flag != 1) && (lux != ERROR))
+                    {
+                        sprintf(buffer,"Fridge door is opened\n");
+                    }
+                    else if((fridge_state == DARK) && (lux_dead_flag != 1) && (lux != ERROR))
+                    {
+                        sprintf(buffer,"Fridge door is closed\n");
+                    }
+                    else
+                    {
+                        sprintf(buffer,"Fridge in unknown state\n");
+                    }
+
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+
+                }
+
+                /*Invalid remote request client*/
+                else
+                {
+                    memset(buffer,'\0',MAX_BUFFER_SIZE);
+                    printf("Invalid remote request\n");
+                    sprintf(buffer,"Invalid remote request\n");
+                    send(new_socket, buffer, MAX_BUFFER_SIZE, 0);
+                }  
+            }
+            close(new_socket);
+            exit(0); 
+        }
+    }   
+}   /**
+ * @\file	gpio.c
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the definitions for the gpio pins 
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "gpio.h"
+
+
+int led_on(int8_t pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
+
+	gpio_pin = USR_LED_BASE + pin;
+
+	/* Path to the specific USR LED file system */
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
+
+	FILE *file_ptr = fopen(gpio_path, "w");
+	
+	fputc('1', file_ptr);
+	fclose(file_ptr);	
+
+	return SUCCESS;
+}
+
+int led_off(int8_t pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
+
+	gpio_pin = USR_LED_BASE + pin;
+
+	/* Path to the specific USR LED file system */
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/value");
+
+	FILE *file_ptr = fopen(gpio_path, "w");
+	
+	fputc('0', file_ptr);
+	fclose(file_ptr);	
+
+	return SUCCESS;
+}
+
+int gpio_pin_init(int8_t pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+	int8_t gpio_pin;
+
+	gpio_pin = USR_LED_BASE + pin;
+
+	FILE *file_ptr = fopen("/sys/class/gpio/export", "w");
+	
+	fprintf(file_ptr,"%d", gpio_pin);
+	fclose(file_ptr);
+
+	/* Path to the specify USR LED as output */
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/direction");
+	file_ptr = fopen(gpio_path, "w+");
+
+	fprintf(file_ptr,"out");
+	fclose(file_ptr);
+
+	return SUCCESS;	
+
+}
+
+int gpio_interrupt_init(int8_t gpio_pin)
+{
+	char gpio_path[MAX_BUFFER_SIZE];
+
+	FILE *file_ptr = fopen("/sys/class/gpio/export", "w");
+	
+	fprintf(file_ptr,"%d", gpio_pin);
+	fclose(file_ptr);
+
+	/* Path to the specify GPIO as input */
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/direction");
+	file_ptr = fopen(gpio_path, "w+");
+
+	fprintf(file_ptr,"in");
+	fclose(file_ptr);
+
+	memset(gpio_path,'\0',MAX_BUFFER_SIZE);
+	sprintf(gpio_path,"%s%d%s","/sys/class/gpio/gpio",gpio_pin,"/edge");
+	file_ptr = fopen(gpio_path, "w+");
+
+	fprintf(file_ptr,"both");
+	fclose(file_ptr);
+
+	return SUCCESS;
+}
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "heartbeat.h"
+
+/*****************************************************************
+						Globals
+*****************************************************************/
+timer_t timer_id_temp, timer_id_lux , timer_id_heartbeat;
+
+pthread_t temperature_thread , lux_thread;
+
+//for storing process pid
+pid_t pid;
+
+/*Variables to store the heartbeat count from the threads*/
+int Pulse_temp = 0;
+int Pulse_lux = 0;
+int Pulse_log = 0;
+
+/*variables to store the previous heart beat received so as to find if the thread is alive*/
+int Pulse_temp_prev = 0;
+int Pulse_lux_prev = 0;
+int Pulse_log_prev = 0;
+
+//flags set in the timers
+int FLAG_READ_TEMP = 0;
+int FLAG_READ_LUX = 0;
+
+/*flags for start up tests*/
+int logger_thread_creation = 0;
+int remote_socket_thread_creation = 0;
+int temperature_thread_creation = 0;
+int lux_thread_creation = 0;
+
+/*flags to be set if the thread is dead*/
+int temp_dead_flag = 0;
+int lux_dead_flag = 0;
+int remote_socket_dead_flag = 0;
+int logger_dead_flag = 0;
+
+/* flags to blocks the thread until start up thread completion*/
+volatile int start_temp_thread = 0;
+volatile int start_lux_thread = 0;
+
+/*******************************
+	Globals Temp thread
+********************************/
+int fd1_w; /*for dumping the heart beat to a pipe*/
+
+/*******************************
+	Globals Lux thread
+********************************/
+int fd2_w; /*for dumping the heart beat to a pipe*/
+
+/*******************************
+	Globals heart beat - main 
+********************************/
+int fd1, fd2, fd3; /*for dumping the heart beat to a pipe*/
+
+
+
+/*****************************************************************
+					Heart_beat checker
+*****************************************************************/
+void beat_timer_handler(union sigval val)
+{
+	char buffer[MAX_BUFFER_SIZE];
+
+	#ifdef DEBUG
+	printf("L p:%d c:%d\n",Pulse_lux_prev,Pulse_lux);
+	printf("T p:%d c:%d\n",Pulse_temp_prev,Pulse_temp);
+	printf("G p:%d c:%d\n",Pulse_log_prev,Pulse_log);
+	#endif
+
+	/*Check liveliness of temperature thread*/
+	if(Pulse_temp <= Pulse_temp_prev)
+	{
+		printf("Temp thread dead\n");
+
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Temp thread dead", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	}
+
+	/*Check liveliness of logger thread*/
+	if(Pulse_log <= Pulse_log_prev)
+	{
+		printf("Log thread dead\n");
+
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Log thread dead", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	/*Check liveliness of lux thread*/
+	if(Pulse_lux <= Pulse_lux_prev)
+	{
+		printf("Lux thread dead\n");
+
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Lux thread dead", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	/*Assigning current heart beat values as previous values*/
+	Pulse_lux_prev = Pulse_lux;
+	Pulse_temp_prev = Pulse_temp;
+	Pulse_log_prev = Pulse_log;
+
+	//restarting the heartbeat timer
+	if((kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD)) == ERROR)
+	{
+		perror("Error on kicking timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s kicking timer for heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
+}
+
+
+/***********************************************
+			Main Function
+***********************************************/
+
+#if NO_UNIT_TEST
+
+int main(int argc, char *argv[])
+{
+
+	if(argc < 3)
+	{
+		perror("Please enter the <log file name> follwed by <log file folder name>");
+		exit(ERROR);
+	}
+
+	int8_t i = 0;
+
+	/*get the process id of the process*/
+	pid = getpid();
+	printf("\n\nPID of the process - %d\n",getpid());
+
+	/*Assigned a signal handler for each thread to control it*/
+	signal(SIGUSR1,hanler_kill_temp);
+	signal(SIGUSR2,hanler_kill_lux);
+	signal(SIGTERM,hanler_kill_main);
+	signal(SIGALRM,hanler_kill_log);
+
+	file_descriptors fd;
+	
+	/*gets the logger file name and log file folder name from command line argments*/
+	fd.file_name = argv[1];
+	fd.file_path = argv[2];
+
+
+	mkdir(LOG_PATH,ACCESSPERMS);
+	
+	char file_path[MAX_BUFFER_SIZE];
+	sprintf(file_path,"%s%s",LOG_PATH,"log");
+
+	/*creating folder for logger file*/
+	mkdir(file_path,ACCESSPERMS); // ACCESSPERMS = 0777
+	
+	
+	char file_name[MAX_BUFFER_SIZE];
+	sprintf(file_name,"%s%s/%s",LOG_PATH, fd.file_path, fd.file_name);
+
+	/*creating the looger file*/
+	logger_init(file_name);
+
+	for(i=0; i<4; i++)
+	{
+		gpio_pin_init(i);
+		led_off(i);
+	}
+
+	if (pthread_mutex_init(&lock_res, NULL) != 0) 
+    { 
+        perror("Mutex init failed\n"); 
+        return ERROR; 
+    }
+
+	file_ptr = fopen(file_name, "a+");
+	if(file_ptr == NULL)
+	{
+		perror("Error on creating log file\n");
+	}
+
+
+	pthread_attr_t attr;
+	pthread_attr_init(&attr); 
+
+	/*Spawning the logger thread*/
+	if(pthread_create(&logger_thread, &attr, logger_thread_callback, (void *)&fd) != 0)
+	{
+		perror("Logger thread creation failed");
+	}
+	else
+	{
+		logger_thread_creation = 1;
+	}
+
+	/*Spawning the temperature thread*/
+	if(pthread_create(&temperature_thread, &attr, temperature_task, NULL) != 0) 	
+	{
+		perror("Temperature thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Temperature thread creation failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	else
+	{
+		temperature_thread_creation = 1;
+	}
+	
+	/*Spawning the lux thread*/
+	if(pthread_create(&lux_thread, &attr, lux_task, NULL) != 0)
+	{
+		perror("Lux thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Lux thread creation failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	else
+	{
+		lux_thread_creation = 1;
+	}
+
+	/*Spawning the remote request thread thread*/
+	if(pthread_create(&remote_request_thread, &attr, remote_request_callback, (void *)&fd) != 0)
+	{
+		perror("Remote socket thread creation failed");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Remote socket thread creation failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	else
+	{
+		remote_socket_thread_creation = 1;
+	}
+
+
+	/*Creating fifo to receive the heartbeat from the threads*/
+	fd1 = open(Temp,O_RDONLY | O_NONBLOCK | O_CREAT, 0666   );
+	if(fd1 < 0)
+	{
+		perror("error on opening fd1 Temp heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s opening fd1 FIFO Temp heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+       	
+
+	fd2 = open(Lux,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+	if(fd2 < 0)
+	{
+		perror("error on opening fd2 Lux heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s opening fd2 FIFO lux heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+       	
+
+    fd3 = open(log_t,O_RDONLY | O_NONBLOCK | O_CREAT, 0666  ); 
+	if(fd3 < 0)
+	{
+		perror("error on opening fd3 Lux heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s opening fd3 FIFO log heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+
+    /*initiating start up tests*/
+    int ret_val = startup_test();
+	if(!ret_val)
+	{
+		#ifdef DEBUG
+		printf("Startup test passed!\n");
+		#endif
+
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"INFO %s Start up test Passed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	/*Killing the thread which failed on Power On Self Test*/
+	else
+	{
+		if(temp_dead_flag)
+		{
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			SOURCE_ID(source_id_buffer);
+			sprintf(buffer,"ERROR %s Temperature start up test failed", source_id_buffer);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			led_on(1);
+			kill(pid, SIGUSR1);
+		}
+		if(lux_dead_flag)
+		{
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			SOURCE_ID(source_id_buffer);
+			sprintf(buffer,"ERROR %s Lux start up test failed", source_id_buffer);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			led_on(0);
+			kill(pid, SIGUSR2);
+		}
+		if(logger_dead_flag)
+			kill(pid, SIGALRM);
+	}
+
+	char pulse[1];
+
+	/*Creating a timer to check the liveliness of the threads at regular intervals*/
+	if((setup_timer_POSIX(&timer_id_heartbeat,beat_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s creating timer for heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if((kick_timer(timer_id_heartbeat, HEART_BEAT_CHECK_PERIOD)) == ERROR)
+	{
+		perror("Error on kicking timer for heartbeat\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s kicking timer for heartbeat failed", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
+	
+
+	/*Heat beat tracker*/
+	while(1)
+	{
+		/*Checks if the heartbeat is received from temperature thread*/
+		memset(pulse,0,1);
+		if(read(fd1,pulse,2) > 0)
+		{
+			Pulse_temp++;
+		}
+
+		
+		/*Checks if the heartbeat is received from lux thread*/
+		memset(pulse,0,1);
+		if(read(fd2,pulse,2) > 0)
+		{
+			Pulse_lux++;
+		}
+
+		/*Checks if the heartbeat is received from logger thread*/
+		memset(pulse,0,1);
+		if(read(fd3,pulse,2) > 0)
+		{
+			Pulse_log++;
+		}
+
+	}
+
+
+	/*wait till the child completes*/
+	pthread_join(temperature_thread,NULL);
+	pthread_join(lux_thread,NULL);
+	pthread_join(logger_thread, NULL);
+	pthread_join(remote_request_thread, NULL);
+
+	
+
+	return SUCCESS;
+
+}
+
+#endif
+
+
+
+
+/***********************************************
+  Signal handler for killing main thread
+***********************************************/
+void hanler_kill_main(int num)
+{
+
+	printf("Encountered SIGTERM signal\nExiting main thread\n");
+	
+	kill(pid, SIGALRM);
+	kill(pid, SIGUSR1);
+	kill(pid, SIGUSR2);
+
+	close(fd1);
+	close(fd2);
+	close(fd3);
+
+	stop_timer(timer_id_heartbeat);
+
+	/* remove the FIFOs */
+    
+    unlink(Lux);
+    unlink(Temp);
+    unlink(log_t);
+    
+    exit(SUCCESS);
+
+}
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+
+#include "logger.h"
+
+
+timer_t timer_id_log;
+int FLAG_LOG;
+
+/*****************************************************************
+                             Globals
+*****************************************************************/
+const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
+
+
+ /* Logger level enum */
+typedef enum log_level_enum{
+    Nolog = -1,
+    Debug = 0,
+    Info,
+    Warn,
+    Error
+}log_level_enum;
+
+const int user_select_log_level = Error; // Threshold log level
+
+int fd3_w; // FIFO descriptor
+
+pthread_mutex_t lock; // Lock for message queue
+
+char time_stam[30];
+
+
+
+/***********************************************
+  Signal handler for killing logger thread
+***********************************************/
+void hanler_kill_log(int num)
+{
+    printf("Encountered SIGALRM signal\n");
+    static int FLAG = 1;
+
+    if((logger_thread_creation == 1) && (FLAG == 1))
+    {
+        printf("\nExiting log thread\n");
+        mq_close(msg_queue);
+        mq_unlink(QUEUE_NAME);
+        close(fd3_w);
+        fclose(file_ptr);
+        stop_timer(timer_id_log);
+        pthread_cancel(logger_thread); 
+        FLAG = 0;
+    }
+    else
+    {
+        printf("Logger thread already dead\n");
+    }
+
+}
+
+/* Function to format the time stamp */
+char *time_stamp()
+{
+	
+    memset(time_stam,'\0',30);
+	time_t timer;
+	timer = time(NULL);
+	strftime(time_stam, 26, "%Y-%m-%d %H:%M:%S", localtime(&timer));
+	return time_stam;	
+}
+
+/* Function to initialize the logger */
+void logger_init(char *file_path)
+{
+	file_ptr = fopen(file_path, "w+");
+	fprintf(file_ptr,"Queue Init\n\n");
+    fclose(file_ptr);
+
+    if (pthread_mutex_init(&lock, NULL) != 0) 
+    { 
+        perror("Mutex init failed\n"); 
+    }
+
+
+    struct mq_attr mq_attributes;
+
+    /* Setting the message queue attributes */
+    mq_attributes.mq_flags = 0;
+    mq_attributes.mq_maxmsg = 100;
+    mq_attributes.mq_msgsize = MAX_BUFFER_SIZE;
+    mq_attributes.mq_curmsgs = 100;
+
+    msg_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR | O_NONBLOCK, 0666, &mq_attributes);
+}
+
+/* Thread callback function for logger */
+void *logger_thread_callback(void *arg)
+{
+	
+    char buffer[MAX_BUFFER_SIZE];
+    char file_name[MAX_BUFFER_SIZE];
+    char logger_level[10];
+
+    int received_log_level;
+    
+    file_descriptors *fd = (file_descriptors *)arg;
+
+    sprintf(file_name,"%s%s/%s",LOG_PATH,fd->file_path,fd->file_name);
+   	printf("File name = %s\n",file_name);
+
+    if((setup_timer_POSIX(&timer_id_log,log_timer_handler)) == ERROR)
+    {
+        perror("Error on creating timer for logger\n");
+        pthread_cancel(logger_thread); 
+    }
+
+    if((kick_timer(timer_id_log, Delay_NS)) == ERROR)
+    {
+        perror("Error on kicking timer for logger\n");
+        pthread_cancel(logger_thread); 
+    }
+
+    /* Opening a FIFO to write logger heartbeat */    
+    fd3_w = open(log_t, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+   	if(fd3_w == ERROR)
+    {
+        perror("Error on creating FIFO fd3_w for loger\n");
+        pthread_cancel(logger_thread); 
+    }
+
+   	while(1)
+   	{
+
+        if(FLAG_LOG)
+        {
+            if((write(fd3_w, "G", 1)) == ERROR)
+            {
+                perror("Error on write of logger heartbeat\n");
+            }
+
+            FLAG_LOG = 0;
+        }
+
+        /* Check if message is received in message queue */
+	    if(mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0) > 0)
+	    {
+			pthread_mutex_lock(&lock);
+
+            sscanf(buffer,"%s",logger_level);
+
+            /* Check user specified log level */
+            if(strcmp(logger_level, "ERROR") == 0)
+                received_log_level = Error;
+            else if(strcmp(logger_level, "WARN") == 0)
+                received_log_level = Warn;
+            else if(strcmp(logger_level, "DEBUG") == 0)
+                received_log_level = Debug;
+            else if(strcmp(logger_level, "INFO") == 0)
+                received_log_level = Info;
+            else
+                received_log_level = Nolog;
+
+            if(received_log_level >= user_select_log_level)
+                LOG_MESSAGE(file_name,"\n%s -----> [TIMESTAMP] %s\n", buffer, time_stamp());
+			
+            memset(buffer,0,MAX_BUFFER_SIZE);
+            pthread_mutex_unlock(&lock);
+	    }
+	}
+
+    mq_close(msg_queue);
+    mq_unlink(QUEUE_NAME);
+    close(fd3_w);
+}
+
+/**
+ * @\file   client_socket.c
+ * @\author Steve Antony X
+ * @\brief  This files contains the definitions for the remote client request program
+ * @\date   03/30/2019
+ *
+ */
+/*****************************************************************
+                        Includes
+*****************************************************************/
+#include "client_socket.h"
+
+
+/*****************************************************************
+                        Globals
+*****************************************************************/
+char message[MAX_BUFFER_SIZE];
+int client_socket;
+
+/******************************************************
+       Function for client socket creation
+       Parameters : port number, ip address in string
+*******************************************************/
+int socket_creation_client(int port,char ip[20])
+{
+    client_socket = socket(AF_INET,SOCK_STREAM,0);// setting the client socket
+
+    if(client_socket < 0 ) // enters this loop if port number is not given as command line argument
+    {
+        //printing error message when opening client socket
+        printf("\nError opening client socket - socket()\n");
+        return ERROR;
+    }
+
+    struct sockaddr_in server_address ;
+    memset(&server_address,0,sizeof(server_address));
+    //assigning values for the server address structure
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port); // converting to network byte order
+    server_address.sin_addr.s_addr = inet_addr(ip);
+
+
+    if(connect(client_socket,(struct sockaddr *) &server_address, sizeof(server_address)) < 0)
+    {
+        printf("Error on connect() function\n");
+        return ERROR;
+    }
+
+    return SUCCESS;
+
+}
+
+/******************************************************
+       Main Function
+*******************************************************/
+int main()
+{
+    if(socket_creation_client(PORT_NO,LOOP_BACK_ADDR) != 0)
+    {
+        perror("Error on client socket creation\n");
+        return ERROR;
+    }
+    char buffer[MAX_BUFFER_SIZE];
+    char message[MAX_BUFFER_SIZE];
+    while(1)
+    {
+        printf("********************** Welcome ***************************\n");
+        printf("1. To know current temperature in Celcius, Type \"tempc\"\n");
+        printf("2. To know current temperature in Kelvin, Type \"tempk\"\n");
+        printf("3. To know current temperature in Farenheit, Type \"tempf\"\n");
+        printf("4. To know current brightness in lux, Type \"lux\"\n");
+        printf("5. To know current fridge door state, Type \"door\"\n");
+        printf("6. To exit, Press Ctrl+c\n");
+
+        scanf("%[^\n]%*c", buffer);
+        send(client_socket, buffer, MAX_BUFFER_SIZE , 0);
+        memset(buffer, 0, MAX_BUFFER_SIZE);
+        recv(client_socket, message ,MAX_BUFFER_SIZE, 0);
+        printf("%s\n", message);
+        memset(message, 0, MAX_BUFFER_SIZE);
+    }
+}/**
+ * @\file	temp.c
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the definitions of functions for the tmp102 temperature sensor
+ * @\date	03/29/2019
+ *
+ */
+
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "temp.h"
+
+/*****************************************************************
+						Globals
+*****************************************************************/
+int file_des_temp;
+
+uint16_t default_configuration = 0x60A0; // Global variable to store the default temperature configurations
+
+/***********************************************
+  Signal handler for killing temperature thread
+***********************************************/
+void hanler_kill_temp(int num)
+{
+	printf("Encountered SIGUSR1 signal\n");
+	static int FLAG = 1;
+
+	if((temperature_thread_creation == 1) && (FLAG == 1))
+	{
+		printf("Exiting temperature thread\n");
+		if(start_temp_thread)
+		{
+			close(fd1_w);
+			stop_timer(timer_id_temp);
+		}
+		pthread_cancel(temperature_thread);
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Temperature thread already dead\n");
+	} 
+}
+
+/*****************************************************************
+						temperature_thread
+*****************************************************************/
+void *temperature_task()
+{
+	while(!start_temp_thread);
+
+	char buffer[MAX_BUFFER_SIZE];
+	uint16_t configuration;
+
+
+	/*To get the Process id and Thread Group ID and logging it*/
+	memset(buffer,0,MAX_BUFFER_SIZE);
+	SOURCE_ID(source_id_buffer);
+    sprintf(buffer,"INFO %s", source_id_buffer);
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	/*creating a timer for temperature task*/
+	if((setup_timer_POSIX(&timer_id_temp,temp_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s creating timer for temp failed- Killed temp thread",source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
+
+	if((kick_timer(timer_id_temp, Delay_NS)) == ERROR)
+	{
+		perror("Error on kicking timer for temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s kicking timer for temp failed- Killed temp thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
+	
+
+	/*opening a pipe to send the heartbeat to the main function*/
+	fd1_w = open(Temp, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	if(fd1_w == ERROR)
+	{
+		perror("Error on creating FIFO fd1_w for Temp\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in temperature sensor init- Killed temp thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(temperature_thread); 
+	}
+
+	/*initiating the temperature sensor*/
+	if(temp_sensor_init() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in temperature sensor init", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	/*Registers to set threshold value*/
+	if(tlow_reg_write(27) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in temperature sensor threshold set", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(thigh_reg_write(29) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in temperature sensor threshold set", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
+
+	/*configuration registers*/
+	if(config_reg_write_default() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"WARN %s Failed in temperature config_reg_write_default", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(config_tm_interrupt() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"WARN %s Failed in temperature config_tm_interrupt", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(config_fault_bits_6() == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"WARN %s Failed in temperature config_fault_bits_6", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	if(config_reg_read(&configuration) == ERROR)
+	{
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"WARN %s Failed in temperature config_reg_read", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+	
+	#ifdef DEBUG
+	printf("FAULT BITS AFTER CONFIG = %x\n",config_read_fault_bits());
+	#endif
+
+	gpio_interrupt_init(BBG_INTERRUPT);
+
+	int fd = open("/sys/class/gpio/gpio49/value", O_RDONLY);
+	int timeout = 100;
+	struct pollfd fds[1];
+
+	fds[0].fd = fd;
+	fds[0].events = POLLPRI | POLLERR | POLLHUP | POLLNVAL;
+
+	while(1)
+	{
+		/*enters if the flag is set in timer of temperature thread
+		temperature will be read when the timer expires*/
+		if(FLAG_READ_TEMP)
+		{
+			/*sending heartbeat to the main task*/
+			if((write(fd1_w, "T", 1)) == ERROR)
+			{
+				perror("Error on write of temp heartbeat\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s on sending temp heartbeat", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+
+			/*logging the heartbeat*/
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			SOURCE_ID(source_id_buffer);
+			sprintf(buffer,"DEBUG %s Pulse from temperature thread", source_id_buffer);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+
+			/*reading the data register*/
+			if(temp_read() == TEMP_ERROR || thigh_reg_read() == TEMP_ERROR || tlow_reg_read() == TEMP_ERROR)
+			{
+				led_on(1);
+				
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s Temperatue sensor error,  trying to reconnect", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+
+			else
+			{
+
+				led_off(1);
+				
+				float temperature_celcius = temp_read() * 0.0625;
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"INFO %s Temperatue in celcius = %f", source_id_buffer, temperature_celcius);
+				printf("Temperatue in celcius = %f\n", temperature_celcius);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"DEBUG %s T-high in celcius = %f", source_id_buffer, thigh_reg_read() * 0.0625);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"DEBUG %s T-low in celcius = %f", source_id_buffer, tlow_reg_read() * 0.0625);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				
+				int ret = poll(fds,1,timeout);
+				char buffer_poll[2];
+
+				
+				if(ret > 0)
+				{
+					memset(buffer_poll,'\0',2);
+				
+					lseek(fds[0].fd,0, SEEK_SET);
+					read(fds[0].fd, buffer_poll, 2);
+
+					if(fds[0].revents & POLLPRI)
+					{
+						printf("\n\n\n VALUE CHANGED \n\n\n");
+						led_on(2);
+					}
+				}
+				else
+				{
+					led_off(2);
+				}
+			}
+
+			/*clearing the flag which will be set when the timer of temperature will be triggered*/			
+        	FLAG_READ_TEMP = 0;
+
+
+
+		}
+	}
+	close(fd1_w);
+}
+
+int config_reg_write_update(uint16_t bit_mask, bool clear)
+{
+	pointer_reg_write(configReg);
+
+	uint16_t writeConfig;
+
+	config_reg_read(&writeConfig);
+
+	/* Check if bit needs to be cleared or set */
+	if(!clear)
+		writeConfig |= bit_mask; 
+	else
+		writeConfig &= ~(bit_mask);
+
+	/*Formatting bytes for writing */
+	uint8_t higherByte = writeConfig >> 8;
+	uint8_t lowerByte = (uint8_t)writeConfig;
+
+
+	// printf("writeConfig = %x\n", writeConfig);
+
+	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on writing CONFIGURATION REGISTER");
+		return ERROR;
+	}
+
+	return SUCCESS;
+}
+
+int config_reg_read_update(uint8_t bit_mask, uint8_t byte, uint8_t shift)
+{
+	pointer_reg_write(configReg);
+
+	uint8_t readBytes[2];
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on reading CONFIGURATION REGISTER");
+		return ERROR;
+	}
+
+	/*Reads the required bits from the byte*/
+	readBytes[byte] &= bit_mask;
+	readBytes[byte] = readBytes[byte] >> shift;
+
+	// printf("bits = %x\n", readBytes[byte]);
+
+	return readBytes[byte];
+}
+
+int temp_sensor_init()
+{
+	pthread_mutex_lock(&lock_res);
+	int ret_val = i2c_setup(&file_des_temp,2,TEMP_ADDR); 
+	pthread_mutex_unlock(&lock_res);
+	
+	return ret_val;
+}
+
+int pointer_reg_write(pointer_reg reg)
+{
+	int8_t buffer = reg;
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = write(file_des_temp, &buffer, sizeof(buffer));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on writing POINTER REGISTER");
+		return ERROR;
+	}
+
+	return SUCCESS;
+}
+
+int config_reg_read(uint16_t *configuration)
+{
+	pointer_reg_write(configReg);
+	uint16_t config;
+
+	uint8_t readBytes[2] = {0};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = read(file_des_temp, &readBytes, sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on reading CONFIGURATION REGISTER");
+		return ERROR;
+	}
+
+	config = (readBytes[0] << 8 | readBytes[1]);
+
+	// printf("CONFIG REG READ = %x\n", config);
+
+	*configuration = config;
+
+	return SUCCESS;
+
+}
+
+
+int config_reg_write_default()
+{
+	pointer_reg_write(configReg);
+
+	uint8_t higherByte = default_configuration >> 8;
+	uint8_t lowerByte = (uint8_t)default_configuration;
+
+	uint8_t writeBytes[3] = {configReg, higherByte, lowerByte};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on writing CONFIGURATION REGISTER");
+		return ERROR;
+	}
+
+	return SUCCESS;
+}
+
+int config_sd()
+{
+	return config_reg_write_update(SD_MODE, 0);	
+}
+
+int config_sd_continuous()
+{
+	return config_reg_write_update(SD_MODE, 1);	
+}
+
+
+int config_pol_alert_active_low()
+{
+	return config_reg_write_update(POL_MODE, 1);	
+}
+
+
+int config_pol_alert_active_high()
+{
+	return config_reg_write_update(POL_MODE, 0);	
+}
+
+
+int config_tm_comparator()
+{
+	return config_reg_write_update(TM_MODE, 1);	
+}
+
+
+int config_tm_interrupt()
+{
+	return config_reg_write_update(TM_MODE, 0);	
+}
+
+
+int config_fault_bits_1()
+{
+	int ret_val;
+	ret_val = config_reg_write_update(F0, 1);
+	
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+
+int config_fault_bits_2()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(F0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_fault_bits_4()
+{
+	int ret_val;
+	
+	ret_val = config_reg_write_update(F0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+
+int config_fault_bits_6()
+{
+	int ret_val;
+	
+	ret_val = config_reg_write_update(F0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(F1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_em_normal()
+{
+	return config_reg_write_update(EM_MODE, 1);
+}
+
+int config_em_extended()
+{
+	return config_reg_write_update(EM_MODE, 0);
+}
+
+
+int config_read_conversion_rate()
+{
+	return config_reg_read_update(READ_CONVERSION, 1, 6);
+
+}
+
+int config_read_fault_bits()
+{
+	return config_reg_read_update(READ_FAULT_BITS, 0, 3);
+}
+
+int config_read_em()
+{
+	return config_reg_read_update(READ_EM_MODE, 1, 4);
+}
+
+int config_conversion_rate_0_25HZ()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+
+}
+
+int config_conversion_rate_1HZ()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_conversion_rate_4HZ()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 1);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_conversion_rate_8HZ()
+{
+	int ret_val;
+
+	ret_val = config_reg_write_update(CR0, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	ret_val = config_reg_write_update(CR1, 0);
+	if(ret_val == ERROR)
+		return ERROR;
+
+	return SUCCESS;
+}
+
+int config_read_alert()
+{
+	return config_reg_read_update(READ_ALERT, 1, 5); 
+}
+int tlow_reg_write(uint8_t temp_in_C)
+{
+	pointer_reg_write(tlowReg);
+
+	uint8_t writeBytes[2] = {tlowReg, temp_in_C};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on writing TLOW REGISTER");
+		return ERROR;
+	}
+
+	return SUCCESS;
+
+}
+
+int thigh_reg_write(uint8_t temp_in_C)
+{
+	pointer_reg_write(tlowReg);
+	uint8_t writeBytes[2] = {thighReg, temp_in_C};
+	
+	pthread_mutex_lock(&lock_res);
+	int ret_val = write(file_des_temp, &writeBytes, sizeof(writeBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on writing THIGH REGISTER");
+		return ERROR;
+	}
+
+	return SUCCESS;
+}
+
+int tlow_reg_read()
+{
+	uint8_t higherByte;
+	uint8_t lowerByte;
+
+	pointer_reg_write(tlowReg);
+
+	uint16_t measured_tlow;
+
+	int8_t readBytes[2] = {0};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on reading TLOW REGISTER");
+		return ERROR;
+	}
+
+	higherByte = readBytes[0];
+	lowerByte = readBytes[1];
+
+	/* Formatting the temperature value received according to the datasheet */
+	measured_tlow = (higherByte << 8) | lowerByte;
+	measured_tlow = measured_tlow >> 4;
+
+	return measured_tlow;
+
+
+}
+
+int thigh_reg_read()
+{
+	uint8_t higherByte;
+	uint8_t lowerByte;
+	
+	pointer_reg_write(thighReg);
+
+	uint16_t measured_thigh;
+
+	int8_t readBytes[2] = {0};
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on reading TLOW REGISTER");
+		return TEMP_ERROR;
+	}
+
+	higherByte = readBytes[0];
+	lowerByte = readBytes[1];
+
+	/* Formatting the temperature value received according to the datasheet */
+	measured_thigh = (higherByte << 8) | lowerByte;
+	measured_thigh = measured_thigh >> 4;
+
+
+	return measured_thigh;
+}
+
+int temp_read()
+{
+	uint8_t higherByte;
+	uint8_t lowerByte;
+	int16_t measured_temperature;
+
+	int8_t readBytes[2] = {0};
+
+	pointer_reg_write(tempReg);
+
+	pthread_mutex_lock(&lock_res);
+	int ret_val = read(file_des_temp, &readBytes,sizeof(readBytes));
+	pthread_mutex_unlock(&lock_res);
+
+	if(ret_val == ERROR)
+	{
+		perror("Error on reading TEMPERATURE REGISTER");
+		return TEMP_ERROR;
+	}
+
+	higherByte = readBytes[0];
+	lowerByte = readBytes[1];
+
+	/* Formatting the temperature value received according to the datasheet */
+	measured_temperature = (higherByte << 8) | lowerByte;
+	measured_temperature = measured_temperature >> 4;
+
+	/* Check if MSB is set */
+	if(measured_temperature & 0x800)
+	{
+		measured_temperature = (~(measured_temperature) + 1) & 0xFFF;
+		measured_temperature = -1 * measured_temperature;
+	}
+
+	return measured_temperature;
+}
+
+float temp_in_celcius()
+{
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return (temperature * 0.0625);
+}
+
+float temp_in_kelvin()
+{
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return ((temperature * 0.0625) + 273.15);
+}
+
+float temp_in_fahrenheit()
+{
+	int temperature = temp_read();
+	if(temperature == TEMP_ERROR)
+		return TEMP_ERROR;
+	
+	return (((temperature * 0.0625) * (9/5)) + 32);
+}/**
+ * @\file	lux.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the function definition for lux timer register byte access function
+ * @\date	03/30/2019
+ *
+ */
+/*****************************************************************
+						Includes
+*****************************************************************/
+#include "lux.h"
+
+/*****************************************************************
+						GLOBAL
+*****************************************************************/
+pthread_mutex_t lock_res;
+
+
+/*****************************************************************
+					setting up lux sensor
+*****************************************************************/
+int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t *reg_data, uint8_t flags)
+{
+	int ret_status;
+
+	if(mode == 1) //write mode
+	{
+
+		pthread_mutex_lock(&lock_res);
+		ret_status = write(fd, reg_data, 1);
+		pthread_mutex_unlock(&lock_res);
+
+		if ( ret_status == ERROR)
+		{
+			perror("Error on writing the temp register\n");
+			return ERROR;
+		}
+		return SUCCESS;
+
+	}
+	else if (mode == 0) //read mode
+	{
+		*reg_data = 0x00;
+		pthread_mutex_lock(&lock_res);
+		ret_status = read(fd, reg_data, 1);
+		pthread_mutex_unlock(&lock_res);
+
+		/*reading CH1 value lower byte*/
+		if ( ret_status == ERROR)
+		{
+			perror("Error on reading register\n");
+			return ERROR;
+		}
+		return SUCCESS;
+	}
+	else if (mode == 2) //command mode
+	{
+		uint8_t  command;
+		command = WRITE_COMMAND | register_address | flags;
+
+		pthread_mutex_lock(&lock_res);
+		ret_status = write(fd, &command, 1);
+		pthread_mutex_unlock(&lock_res);
+
+		if ( ret_status == ERROR)
+		{
+			perror("Error on writing the temp register\n");
+			return ERROR;
+		}
+		return SUCCESS;
+	}
+	else
+	{
+		printf("unknown mode\n");
+		return ERROR;
+	}
+}
+
