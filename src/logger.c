@@ -131,7 +131,7 @@ void *logger_thread_callback(void *arg)
                 received_log_level = Nolog;
 
             if(received_log_level >= user_select_log_level)
-                LOG_MESSAGE(file_name,"%s -----> [TIMESTAMP] %s\n", buffer, time_stamp());
+                LOG_MESSAGE(file_name,"\n%s -----> [TIMESTAMP] %s\n", buffer, time_stamp());
 			
             memset(buffer,0,MAX_BUFFER_SIZE);
             pthread_mutex_unlock(&lock);

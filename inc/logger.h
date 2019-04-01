@@ -23,6 +23,10 @@
 						  fflush(file_ptr);\
 						  }
 
+#define SOURCE_ID(source_id) { \
+						  sprintf(source_id,"[PID:%d] [TID:%lu] %s", getpid(), syscall(SYS_gettid), __func__);\
+						}
+
 
 #define QUEUE_NAME "/msg_queue"
 #define MAX_BUFFER_SIZE	100
