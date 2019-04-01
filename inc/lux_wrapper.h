@@ -52,9 +52,34 @@
 *****************************************************************/
 extern pthread_mutex_t lock_res;
 
+extern volatile int start_lux_thread ;
+
+extern pthread_t  lux_thread;
+
+extern int fd2_w; /*for dumping the heart beat to a pipe*/
+
+/*flags for start up tests*/
+extern int lux_thread_creation;
+
+extern int lux_dead_flag;
+
 /*****************************************************************
 						Function Protypes
 *****************************************************************/
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_lux
+--------------------------------------------------------------------------------------------
+*	This is signal handler for lux thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_lux(int num);
+
 /*
 --------------------------------------------------------------------------------------------
 lux_sensor_setup
@@ -67,6 +92,19 @@ lux_sensor_setup
 *
 */
 int lux_sensor_setup();
+
+/*
+--------------------------------------------------------------------------------------------
+lux_task
+--------------------------------------------------------------------------------------------
+*	This is the lux thread which will be spawned by the main task
+*
+* 	@\param			none
+*
+* 	@\return		none
+*
+*/
+void *lux_task();
 
 /*
 --------------------------------------------------------------------------------------------

@@ -51,57 +51,12 @@ beat_timer_handler
 */
 void beat_timer_handler(union sigval );
 
-/*
---------------------------------------------------------------------------------------------
-temperature_task
---------------------------------------------------------------------------------------------
-*	This is the temperature thread which will be spawned by the main task
-*
-* 	@\param			none
-*
-* 	@\return		none
-*
-*/
-void *temperature_task();
 
-/*
---------------------------------------------------------------------------------------------
-lux_task
---------------------------------------------------------------------------------------------
-*	This is the lux thread which will be spawned by the main task
-*
-* 	@\param			none
-*
-* 	@\return		none
-*
-*/
-void *lux_task();
 
-/*
---------------------------------------------------------------------------------------------
-hanler_kill_temp
---------------------------------------------------------------------------------------------
-*	This is signal handler for temperature thread
-*
-* 	@\param			signal number
-*
-* 	@\return		none
-*
-*/
-void hanler_kill_temp(int num);
 
-/*
---------------------------------------------------------------------------------------------
-hanler_kill_lux
---------------------------------------------------------------------------------------------
-*	This is signal handler for lux thread
-*
-* 	@\param			signal number
-*
-* 	@\return		none
-*
-*/
-void hanler_kill_lux(int num);
+
+
+
 
 /*
 --------------------------------------------------------------------------------------------

@@ -1,9 +1,20 @@
+/**
+ * @\file	lux.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the function definition for lux timer register byte access function
+ * @\date	03/30/2019
+ *
+ */
 /*****************************************************************
 						Includes
 *****************************************************************/
 #include "lux.h"
 
+/*****************************************************************
+						GLOBAL
+*****************************************************************/
 pthread_mutex_t lock_res;
+
 
 /*****************************************************************
 					setting up lux sensor

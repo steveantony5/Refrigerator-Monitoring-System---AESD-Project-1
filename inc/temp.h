@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include "logger.h"
 #include "common.h"
+#include "heartbeat.h"
 
 #include "i2c.h"
 
@@ -54,7 +55,42 @@ typedef enum pointer_reg{
 
 extern pthread_mutex_t lock_res;
 
+extern pthread_t temperature_thread;
 
+extern volatile int start_temp_thread;
+
+extern int fd1_w; /*for dumping the heart beat to a pipe*/
+
+/*flags for start up tests*/
+extern int temperature_thread_creation;
+
+extern int temp_dead_flag;
+
+/*
+--------------------------------------------------------------------------------------------
+hanler_kill_temp
+--------------------------------------------------------------------------------------------
+*	This is signal handler for temperature thread
+*
+* 	@\param			signal number
+*
+* 	@\return		none
+*
+*/
+void hanler_kill_temp(int num);
+
+/*
+--------------------------------------------------------------------------------------------
+temperature_task
+--------------------------------------------------------------------------------------------
+*	This is the temperature thread which will be spawned by the main task
+*
+* 	@\param			none
+*
+* 	@\return		none
+*
+*/
+void *temperature_task();
 /**
 --------------------------------------------------------------------------------------------
 temp_sensor_init

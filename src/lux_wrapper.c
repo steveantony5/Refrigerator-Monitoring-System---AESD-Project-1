@@ -1,7 +1,15 @@
+/**
+ * @\file	temp.c
+ * @\author	Steve Antony X
+ * @\brief	This files contains the definitions of wrapper functions for lux registers
+ * @\date	03/29/2019
+ *
+ */
 /*****************************************************************
 						Includes
 *****************************************************************/
 #include "lux_wrapper.h"
+
 
 /*****************************************************************
 						Global definitions
@@ -27,7 +35,190 @@ uint16_t LSB_1;
 uint16_t CH0;
 uint16_t CH1;
 
+/***********************************************
+  Signal handler for killing lux thread
+***********************************************/
+void hanler_kill_lux(int num)
+{
+	printf("Encountered SIGUSR2 signal\n");
+	static int FLAG = 1;
 
+	if((lux_thread_creation == 1) && (FLAG == 1))
+	{
+		printf("Exiting lux thread\n");
+		
+		if(start_lux_thread)
+		{
+			close(fd2_w);
+			stop_timer(timer_id_lux);
+		}
+		pthread_cancel(lux_thread);
+		FLAG = 0;
+	}
+	else
+	{
+		printf("Lux thread already dead\n");
+	}
+
+}
+/*****************************************************************
+						lux_thread
+*****************************************************************/
+void *lux_task()
+{
+
+	while(!start_lux_thread);
+
+	/*for stroing the lux value*/
+	float lux = 0;
+
+	char buffer[MAX_BUFFER_SIZE];
+
+	/*log the process id and thread group id of the thread*/
+	memset(buffer,'\0',MAX_BUFFER_SIZE);
+	SOURCE_ID(source_id_buffer);
+	sprintf(buffer,"INFO [PID:%d] [TID:%lu]", getpid(), syscall(SYS_gettid));
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	/*setting the timer for lux thread*/
+	if((setup_timer_POSIX(&timer_id_lux,lux_timer_handler)) == ERROR)
+	{
+		perror("Error on creating timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s creating timer for lux failed- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+
+	if((kick_timer(timer_id_lux, Delay_NS)) == ERROR)
+	{
+		perror("Error on kicking timer for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s kicking timer for lux failed- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+	
+
+
+	/*opening a pipe to dump the heartbeat from lux thread to maintask*/
+	fd2_w = open(Lux, O_WRONLY | O_NONBLOCK | O_CREAT, 0666);
+	if(fd2_w == ERROR)
+	{
+		perror("Error on creating FIFO fd2_w for lux\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %s Failed in lux sensor init- Killed lux thread", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+		pthread_cancel(lux_thread); 
+	}
+
+	/*setting up the lux sensor*/
+	if(lux_sensor_setup()<0)
+	{
+		perror("Error on lux sensor configuration\n");
+		memset(buffer,'\0',MAX_BUFFER_SIZE);
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"ERROR %sFailed in lux sensor setup", source_id_buffer);
+		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	}
+
+	while(1)
+	{
+		/*enters if the flag is set in timer of lux thread
+		lux value will be read when the timer expires*/
+		if(FLAG_READ_LUX)
+		{
+
+			/*sends heartbeat*/
+			if((write(fd2_w, "L", 1)) == ERROR)
+			{
+				perror("Error on write of lux heartbeat\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s on sending lux heartbeat", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+			
+
+			/*logging the heartbeat*/
+			memset(buffer,'\0',MAX_BUFFER_SIZE);
+			SOURCE_ID(source_id_buffer);
+			sprintf(buffer,"DEBUG %s Pulse from lux thread", source_id_buffer);
+			mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+			/*introduced delay for adc conversion*/
+			usleep(500);
+			if((read_channel_0() == ERROR) || (read_channel_1() == ERROR))
+			{
+				led_on(0);
+				// printf("LED ON LUX\n");
+				perror("Error on reading channels\n");
+				printf("Lux sensor error, trying to reconnect\n");
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"ERROR %s Lux sensor error,  trying to reconnect", source_id_buffer);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+			}
+
+			else
+			{
+				led_off(0);
+				// printf("LED OFF LUX\n");
+
+				/*measuring lux value*/
+				lux = lux_measurement(CH0,CH1);
+				printf("lux %f\n",lux);
+
+				/*checks if a transition occured from dark to bright
+				 or bright to dark
+				 the threshold value is set as 70*/
+				has_state_transition_occurred(lux);
+
+				memset(buffer,'\0',MAX_BUFFER_SIZE);
+				SOURCE_ID(source_id_buffer);
+				sprintf(buffer,"INFO %s Lux = %f", source_id_buffer, lux);
+				mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				/*get the current state of the fridge door
+				 whether it is opened or closed*/
+				fridge_state  = get_current_state_fridge(lux);
+				if(fridge_state == BRIGHT)
+				{
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					SOURCE_ID(source_id_buffer);
+					sprintf(buffer,"DEBUG %s Fridge state - Door opened", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == DARK)
+				{
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					SOURCE_ID(source_id_buffer);
+					sprintf(buffer,"DEBUG %s Fridge state - Door Closed", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+				}
+				else if(fridge_state == ERROR)
+				{
+					printf("Fridge in unknown state\n");
+					SOURCE_ID(source_id_buffer);
+					memset(buffer,'\0',MAX_BUFFER_SIZE);
+					sprintf(buffer,"DEBUG %s Fridge state - unknown", source_id_buffer);
+					mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+				}
+
+			}
+
+			/*clearing the flag which will be set when the timer of lux will be triggered*/
+        	FLAG_READ_LUX = 0;
+		}
+	}
+	close(fd2_w);
+	return SUCCESS;
+}
 /*****************************************************************
 					setting up lux sensor
 *****************************************************************/
@@ -175,7 +366,7 @@ int indication_register()
 
 	memset(buffer,0,MAX_BUFFER_SIZE);
 	SOURCE_ID(source_id_buffer);
-	sprintf(buffer,"INFO %s LUX sensor\nPNO: %d\nRev no %d\n\n",source_id_buffer,part_no,rev_no);
+	sprintf(buffer,"INFO %s LUX sensor PNO: %d Rev no %d",source_id_buffer,part_no,rev_no);
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
