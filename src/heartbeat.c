@@ -566,6 +566,7 @@ int startup_test()
 			Main Function
 ***********************************************/
 
+#if NO_UNIT_TEST
 int main(int argc, char *argv[])
 {
 
@@ -807,6 +808,8 @@ int main(int argc, char *argv[])
 	return SUCCESS;
 
 }
+
+#endif
 /***********************************************
   Signal handler for killing temperature thread
 ***********************************************/

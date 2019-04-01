@@ -4,6 +4,10 @@
 #include <assert.h>
 #include "common.h"
 #include <stdio.h>
+#include "led.h"
+#include "logger.h"
+
+#define MAX_BUFFER_SIZE 100
 
 int file_des_lux;
 uint8_t register_data;
@@ -11,7 +15,7 @@ int ret_status;
 
 int unit_lux()
 {
-	printf("Begin\n");
+	printf("Begin lux sensor test\n");
 
 
 	i2c_setup(&file_des_lux,2,0x39);
@@ -165,7 +169,7 @@ int unit_lux()
 
 
 
-	printf("End\n");
+	printf("Ending lux sensor test\n");
 	return SUCCESS;
 
 }
@@ -173,7 +177,7 @@ int unit_lux()
 
 int unit_temp()
 {
-	printf("Begin\n");
+	printf("Begin temperature sensor test\n");
 	uint16_t configuration;
 
 	/******************************************************/
@@ -259,25 +263,83 @@ int unit_temp()
 	assert(configuration == 0x78F0);
 
 	/******************************************************/
+	/* Configuring sensor alert pin to be active high */
+	ret_status = config_pol_alert_active_high();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x7CD0);
+
+	/******************************************************/
+	/* Configuring sensor alert pin to be active high */
+	ret_status = config_pol_alert_active_low();
+	assert(ret_status == SUCCESS);
+
+	config_reg_read(&configuration);
+	assert(configuration == 0x78F0);
+
+	/******************************************************/
 	/* Reading alert pin (alert pin is active low) */
 	ret_status = config_read_alert();
 	assert(ret_status == 1);
+
+	printf("Ending temperature sensor test\n");
 
 	return SUCCESS;
 
 }
 
-int main()
+int unit_logger(char *file_name)
 {
+	printf("Begin logger test\n");
+	logger_init(file_name);
+	char buffer[MAX_BUFFER_SIZE];
+
+	strcpy(buffer,"UNIT TESTING");
+	
+	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+	
+	mq_receive(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
+
+	assert(strcmp(buffer,"UNIT TESTING") == 0);
+	
+
+	mq_close(msg_queue);
+    mq_unlink(QUEUE_NAME);
+
+    printf("Ending logger test\n");
+	// assert(ret_status == SUCCESS);
+
+	return SUCCESS;
+}	
+
+int main(int argc, char *argv[])
+{
+	if(argc < 3)
+	{
+		perror("Please enter the <log file name> follwed by <log file folder name>");
+		exit(ERROR);
+	}
+	char *file_name_main = argv[1];
+	char *file_path = argv[2];
+	char file_name[MAX_BUFFER_SIZE];
+	sprintf(file_name,"%s%s/%s",LOG_PATH, file_path, file_name_main);
+
 	int ret_val;
 
+	ret_val = unit_logger(file_name);
+
+	if(!ret_val)
+		printf("Logger unit test passed\n");
+
 	ret_val = unit_temp();
-	if(ret_val)
+	if(!ret_val)
 		printf("Temperature unit test passed\n");
 
 
 	ret_val = unit_lux();
-	printf("Lux unit test passed\n");
+	if(!ret_val)	
+		printf("Lux unit test passed\n");
 
 
 

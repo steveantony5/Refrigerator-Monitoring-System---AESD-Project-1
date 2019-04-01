@@ -32,11 +32,11 @@ unit_test:
 	arm-linux-gcc -o test unit/unit.c -Wall -Werror
 
 test_linux:
-	arm-linux-gcc -o test unit/unit.c  src/i2c.c src/lux.c src/temp.c src/lux_wrapper.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
+	arm-linux-gcc -o test unit/unit.c  src/led.c src/logger.c src/heartbeat.c src/remote_request.c src/POSIX_timer.c src/i2c.c src/lux.c src/temp.c src/lux_wrapper.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 
 
 test_temp:
-	arm-linux-gcc -o temperature_unit unit/temperature_unit.c src/i2c.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
+	arm-linux-gcc -o temperature_unit unit/temperature_unit.c src/led.c src/i2c.c src/lux.c src/temp.c -Wall -Werror -Iinc/ -pthread -lrt -g -lm
 clean:
 	rm -f *.o main remote_api client_socket test
 	rm -rf $(LOG_FOLDER)
