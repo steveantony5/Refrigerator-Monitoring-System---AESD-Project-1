@@ -20,6 +20,7 @@
 #include "led.h"
 #include "remote_request.h"
 #include "common.h"
+#include "POST.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -51,25 +52,6 @@ beat_timer_handler
 */
 void beat_timer_handler(union sigval );
 
-
-
-
-
-
-
-
-/*
---------------------------------------------------------------------------------------------
-hanler_kill_log
---------------------------------------------------------------------------------------------
-*	This is signal handler for logger thread
-*
-* 	@\param			signal number
-*
-* 	@\return		none
-*
-*/
-void hanler_kill_log(int num);
 
 /*
 --------------------------------------------------------------------------------------------

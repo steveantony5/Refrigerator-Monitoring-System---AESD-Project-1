@@ -31,6 +31,34 @@ pthread_mutex_t lock; // Lock for message queue
 
 char time_stam[30];
 
+extern int logger_thread_creation;
+
+
+/***********************************************
+  Signal handler for killing logger thread
+***********************************************/
+void hanler_kill_log(int num)
+{
+    printf("Encountered SIGALRM signal\n");
+    static int FLAG = 1;
+
+    if((logger_thread_creation == 1) && (FLAG == 1))
+    {
+        printf("\nExiting log thread\n");
+        mq_close(msg_queue);
+        mq_unlink(QUEUE_NAME);
+        close(fd3_w);
+        fclose(file_ptr);
+        stop_timer(timer_id_log);
+        pthread_cancel(logger_thread); 
+        FLAG = 0;
+    }
+    else
+    {
+        printf("Logger thread already dead\n");
+    }
+
+}
 
 /* Function to format the time stamp */
 char *time_stamp()
@@ -46,7 +74,6 @@ char *time_stamp()
 /* Function to initialize the logger */
 void logger_init(char *file_path)
 {
-	FILE *file_ptr;
 	file_ptr = fopen(file_path, "w+");
 	fprintf(file_ptr,"Queue Init\n\n");
     fclose(file_ptr);
@@ -72,8 +99,6 @@ void logger_init(char *file_path)
 void *logger_thread_callback(void *arg)
 {
 	
-    // while(!start_logger_thread);
-
     char buffer[MAX_BUFFER_SIZE];
     char file_name[MAX_BUFFER_SIZE];
     char logger_level[10];
