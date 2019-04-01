@@ -174,7 +174,8 @@ int indication_register()
 
 
 	memset(buffer,0,MAX_BUFFER_SIZE);
-	sprintf(buffer,"LUX sensor\nPNO: %d\nRev no %d\n\n",part_no,rev_no);
+	SOURCE_ID(source_id_buffer);
+	sprintf(buffer,"INFO %s LUX sensor\nPNO: %d\nRev no %d\n\n",source_id_buffer,part_no,rev_no);
 	mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
 
@@ -336,7 +337,8 @@ void has_state_transition_occurred(float lux)
 	{
 		printf("State changed from Dark to Bright\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
-		sprintf(buffer,"State changed from Dark to Bright\n");
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"INFO %s State changed from Dark to Bright\n", source_id_buffer);
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 		led_on(3);
 
@@ -345,7 +347,8 @@ void has_state_transition_occurred(float lux)
 	{
 		printf("State changed from Bright to Dark\n");
 		memset(buffer,0,MAX_BUFFER_SIZE);
-		sprintf(buffer,"State changed from Bright to Dark\n");
+		SOURCE_ID(source_id_buffer);
+		sprintf(buffer,"INFO State %s changed from Bright to Dark\n", source_id_buffer);
 		mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 		led_off(3);
 	}

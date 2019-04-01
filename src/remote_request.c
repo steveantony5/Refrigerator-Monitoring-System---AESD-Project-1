@@ -81,7 +81,8 @@ void *remote_request_callback(void *arg)
     
     
     memset(buffer,'\0',MAX_BUFFER_SIZE);
-    sprintf(buffer,"%s","DEBUG Remote request task started");
+    SOURCE_ID(source_id_buffer);
+    sprintf(buffer,"DEBUG %s Remote request task started", source_id_buffer);
     mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
     
@@ -89,7 +90,8 @@ void *remote_request_callback(void *arg)
     {
         perror("Error on socket creation - killed remote request socket");
         memset(buffer,'\0',MAX_BUFFER_SIZE);
-        sprintf(buffer,"ERROR Socket for server failed- Killed remote request thread");
+        SOURCE_ID(source_id_buffer);
+        sprintf(buffer,"ERROR %s Socket for server failed- Killed remote request thread", source_id_buffer);
         mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
         pthread_cancel(remote_request_thread);
     } 

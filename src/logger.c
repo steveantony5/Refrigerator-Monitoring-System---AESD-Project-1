@@ -8,7 +8,6 @@
 timer_t timer_id_log;
 int FLAG_LOG;
 
-// extern volatile int start_logger_thread;
 
 const char *log_level[10] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
@@ -57,9 +56,9 @@ void logger_init(char *file_path)
     struct mq_attr mq_attributes;
 
     mq_attributes.mq_flags = 0;
-    mq_attributes.mq_maxmsg = 10;
+    mq_attributes.mq_maxmsg = 100;
     mq_attributes.mq_msgsize = MAX_BUFFER_SIZE;
-    mq_attributes.mq_curmsgs = 10;
+    mq_attributes.mq_curmsgs = 100;
 
     msg_queue = mq_open(QUEUE_NAME, O_CREAT | O_RDWR | O_NONBLOCK, 0666, &mq_attributes);
 }
