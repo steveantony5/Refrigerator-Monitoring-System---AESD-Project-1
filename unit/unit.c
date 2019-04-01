@@ -50,7 +50,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA after write%x\n",register_data );
 	assert(register_data ==  0x33);//reserved set as 3
 	
 	/*************************TIMING_REGISTER*****************************/
@@ -66,7 +65,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA after write%x\n",register_data );
 	assert(register_data ==  0x02);
 
 
@@ -83,7 +81,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA after write%x\n",register_data );
 	assert(ret_status == SUCCESS);
 	assert(register_data ==  0x11);
 
@@ -96,7 +93,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA - Indication register -%x\n",register_data );
 	assert(ret_status == SUCCESS);
 
 	
@@ -107,7 +103,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA - DATA0LOW_REGISTER- %x\n",register_data );
 	assert(ret_status == SUCCESS);
 
 	
@@ -118,7 +113,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA - DATA0HIGH_REGISTER %x\n",register_data );
 	assert(ret_status == SUCCESS);
 
 	
@@ -129,7 +123,6 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA - DATA1LOW_REGISTER %x\n",register_data );
 	assert(ret_status == SUCCESS);
 
 	
@@ -140,16 +133,16 @@ int unit_lux()
 
 	register_data = 0;
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
-	printf("REGISTER DATA - DATA1HIGH_REGISTER %x\n",register_data );
 	assert(ret_status == SUCCESS);
 
 	
 	/********************THRESHHIGHLOW**********************************/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
+
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
-	register_data = 0xB8; //set to 3000
+	register_data = 0x02; //set to 3000
 	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	assert(ret_status == SUCCESS);
 
@@ -159,11 +152,9 @@ int unit_lux()
 	/*Writing to threshold register*/
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHHIGHLOW %x\n",register_data );
-	assert(register_data == 0xB8);
 
-	/***********************THRESHHIGHHIGH*******************************/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	// /***********************THRESHHIGHHIGH*******************************/
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
@@ -171,16 +162,14 @@ int unit_lux()
 	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	assert(ret_status == SUCCESS);
 
-	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHHIGHHIGH %x\n",register_data );
-	assert(register_data == 0xBB);
 	/********************THRESHLOWLOW**********************************/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
@@ -188,32 +177,28 @@ int unit_lux()
 	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	assert(ret_status == SUCCESS);
 
-	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHLOWLOW %x\n",register_data );
-	assert(register_data == 0x01);
 
 	/********************THRESHLOWHIGH**********************************/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
-	register_data = 0x01; 
+	register_data = 0x02; 
 	ret_status = byte_access_lux_register(file_des_lux, NONE,WRITE , &register_data, NONE );
 	assert(ret_status == SUCCESS);
 
-	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHLOWHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	assert(ret_status == SUCCESS);
 
 	/*Writing to threshold register*/
 	ret_status = byte_access_lux_register(file_des_lux, NONE,READ , &register_data, NONE );
 	assert(ret_status == SUCCESS);
-	printf("REGISTER DATA - THRESHLOWLOW %x\n",register_data );
-	assert(register_data == 0x01);
 
 
 	/******************************************************/

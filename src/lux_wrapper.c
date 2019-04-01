@@ -85,7 +85,7 @@ int lux_sensor_setup()
 	/**********************************/
 	/*command to write as a word for high threshold register */
 	/*upper threshold is set to 3000*/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHLOW,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	if(ret_status == ERROR)
 	{
 		perror("Error on THRESHHIGHLOW of lux sensor");
@@ -102,7 +102,7 @@ int lux_sensor_setup()
 	}
 
 	/**********************************/
-	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, NONE );
+	ret_status = byte_access_lux_register(file_des_lux, THRESHHIGHHIGH,COMMAND , &register_data, WRITE_COMMAND_WORD );
 	if(ret_status == ERROR)
 	{
 		perror("Error on THRESHHIGHHIGH of lux sensor");
