@@ -1,6 +1,6 @@
 /**
  * @\file   client_socket.c
- * @\author Sanju Prakash Kannioth
+ * @\author Steve Antony X
  * @\brief  This files contains the definitions for the remote client request program
  * @\date   03/30/2019
  *
@@ -8,20 +8,12 @@
 /*****************************************************************
                         Includes
 *****************************************************************/
+#include "client_socket.h"
 
-#include <stdio.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <string.h>
-#include <time.h>
 
-#define PORT_NO 6001
-#define LOOP_BACK_ADDR "127.0.0.1"
-#define MAX_BUFFER_SIZE 100
-
+/*****************************************************************
+                        Globals
+*****************************************************************/
 char message[MAX_BUFFER_SIZE];
 int client_socket;
 
@@ -36,8 +28,8 @@ int socket_creation_client(int port,char ip[20])
     if(client_socket < 0 ) // enters this loop if port number is not given as command line argument
     {
         //printing error message when opening client socket
-        printf("\nError opening client socket\n");
-        return 1;
+        printf("\nError opening client socket - socket()\n");
+        return ERROR;
     }
 
     struct sockaddr_in server_address ;
@@ -50,20 +42,23 @@ int socket_creation_client(int port,char ip[20])
 
     if(connect(client_socket,(struct sockaddr *) &server_address, sizeof(server_address)) < 0)
     {
-        printf("Error on connect\n");
-        return 1;
+        printf("Error on connect() function\n");
+        return ERROR;
     }
 
-    return 0;
+    return SUCCESS;
 
 }
 
-
+/******************************************************
+       Main Function
+*******************************************************/
 int main()
 {
     if(socket_creation_client(PORT_NO,LOOP_BACK_ADDR) != 0)
     {
-        return 1;
+        perror("Error on client socket creation\n");
+        return ERROR;
     }
     char buffer[MAX_BUFFER_SIZE];
     char message[MAX_BUFFER_SIZE];
