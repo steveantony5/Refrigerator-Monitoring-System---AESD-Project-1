@@ -46,6 +46,7 @@ int startup_test()
 		lux_dead_flag = 1;
 	}
 	
+	usleep(500);
 	ret_val = (int)get_lux();
 	if(ret_val == ERROR)
 	{
