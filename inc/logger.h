@@ -1,3 +1,6 @@
+#ifndef LOGGER_H
+#define LOGGER_H
+
 /**
  * @\file	logger.h
  * @\author	Sanju Prakash Kannioth
@@ -5,9 +8,6 @@
  * @\date	03/30/2019
  *
  */
-
-#ifndef LOGGER_H
-#define LOGGER_H
 
 
 /*****************************************************************
@@ -64,6 +64,8 @@ pthread_t logger_thread;
 FILE *file_ptr;
 
 extern char * log_t;
+
+extern int logger_thread_creation;
 
 
 /*

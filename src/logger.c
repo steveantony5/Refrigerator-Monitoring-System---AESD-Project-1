@@ -23,7 +23,7 @@ typedef enum log_level_enum{
     Error
 }log_level_enum;
 
-const int user_select_log_level = Debug; // User define log level
+const int user_select_log_level = Debug; // Threshold log level
 
 int fd3_w; // FIFO descriptor
 
@@ -31,7 +31,6 @@ pthread_mutex_t lock; // Lock for message queue
 
 char time_stam[30];
 
-extern int logger_thread_creation;
 
 
 /***********************************************

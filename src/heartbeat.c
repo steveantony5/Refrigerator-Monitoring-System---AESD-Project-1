@@ -10,8 +10,7 @@ timer_t timer_id_temp, timer_id_lux , timer_id_heartbeat;
 
 pthread_t temperature_thread , lux_thread;
 
-extern pthread_mutex_t lock_res;
-
+//for storing process pid
 pid_t pid;
 
 /*Variables to store the heartbeat count from the threads*/
@@ -34,11 +33,13 @@ int remote_socket_thread_creation = 0;
 int temperature_thread_creation = 0;
 int lux_thread_creation = 0;
 
+/*flags to be set if the thread is dead*/
 int temp_dead_flag = 0;
 int lux_dead_flag = 0;
 int remote_socket_dead_flag = 0;
 int logger_dead_flag = 0;
 
+/* flags to blocks the thread until start up thread completion*/
 volatile int start_temp_thread = 0;
 volatile int start_lux_thread = 0;
 
@@ -129,6 +130,7 @@ void beat_timer_handler(union sigval val)
 ***********************************************/
 
 #if NO_UNIT_TEST
+
 int main(int argc, char *argv[])
 {
 
@@ -402,7 +404,6 @@ void hanler_kill_main(int num)
 	close(fd1);
 	close(fd2);
 	close(fd3);
-	// fclose(file_ptr);
 
 	stop_timer(timer_id_heartbeat);
 
@@ -414,7 +415,5 @@ void hanler_kill_main(int num)
     
     exit(SUCCESS);
 
-
-	
 }
 

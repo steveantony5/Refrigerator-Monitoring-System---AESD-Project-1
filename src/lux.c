@@ -23,7 +23,7 @@ int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t
 {
 	int ret_status;
 
-	if(mode == 1) //write
+	if(mode == 1) //write mode
 	{
 
 		pthread_mutex_lock(&lock_res);
@@ -38,7 +38,7 @@ int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t
 		return SUCCESS;
 
 	}
-	else if (mode == 0) //read
+	else if (mode == 0) //read mode
 	{
 		*reg_data = 0x00;
 		pthread_mutex_lock(&lock_res);
@@ -53,7 +53,7 @@ int byte_access_lux_register(int fd, uint8_t register_address,int mode , uint8_t
 		}
 		return SUCCESS;
 	}
-	else if (mode == 2) //command
+	else if (mode == 2) //command mode
 	{
 		uint8_t  command;
 		command = WRITE_COMMAND | register_address | flags;

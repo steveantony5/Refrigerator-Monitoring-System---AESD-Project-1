@@ -11,7 +11,9 @@
 *****************************************************************/
 #include "remote_request.h"
 
-
+/*****************************************************************
+                        Globals
+*****************************************************************/
 socklen_t clilen;
 struct sockaddr_in to_address;
 /**********************************************
@@ -60,11 +62,6 @@ int socket_creation_server(int port)
             printf("\nlistening to remote requests.....\n");
         }
 
-       
-       
-        
-
-        
         return SUCCESS;
 
 }
@@ -85,7 +82,7 @@ void *remote_request_callback(void *arg)
     sprintf(buffer,"DEBUG %s Remote request task started", source_id_buffer);
     mq_send(msg_queue, buffer, MAX_BUFFER_SIZE, 0);
 
-    
+    //creating socket for server
 	if(socket_creation_server(PORT_NO)== ERROR)
     {
         perror("Error on socket creation - killed remote request socket");
@@ -105,6 +102,7 @@ void *remote_request_callback(void *arg)
 
         clilen = sizeof(to_address);
 
+        /*accepting client requests*/
         new_socket = accept(server_socket,(struct sockaddr*) &to_address, &clilen);
         if(new_socket<0)
         {
@@ -115,6 +113,7 @@ void *remote_request_callback(void *arg)
             printf("established connection\n");
         }
 
+        /*Forked the request received so as to accept multiple clients*/
     	int child_id = 0;
         /*Creating child processes*/
         /*Returns zero to child process if there is successful child creation*/

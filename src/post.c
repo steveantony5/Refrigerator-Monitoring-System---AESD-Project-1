@@ -1,18 +1,15 @@
+/**
+ * @\file	post.h
+ * @\author	Sanju Prakash Kannioth
+ * @\brief	This files contains the declarations and header files for the lux sensor 
+ * @\date	03/30/2019
+ *
+ */
+
+/*****************************************************************
+					     Includes
+*****************************************************************/
 #include "POST.h"
-
-extern int logger_thread_creation;
-extern int remote_socket_thread_creation;
-extern int temperature_thread_creation;
-extern int lux_thread_creation;
-
-extern int temp_dead_flag;
-extern int lux_dead_flag;
-extern int remote_socket_dead_flag;
-extern int logger_dead_flag;
-
-extern volatile int start_temp_thread;
-extern volatile int start_lux_thread;
-
 
 /*****************************************************************
 					Power On Self Test - POST

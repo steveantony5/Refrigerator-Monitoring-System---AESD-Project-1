@@ -331,7 +331,7 @@ int lux_sensor_setup()
 }
 
 /*****************************************************************
-			Indication register for start up
+Indication register for start up to get part number and revision number of sensor
 *****************************************************************/
 int indication_register()
 {
